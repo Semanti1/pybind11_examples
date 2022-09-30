@@ -9,3 +9,7 @@
 	path = 16_testing_obj_slicing/pybind11
 	url = https://github.com/RobotLocomotion/pybind11.git
 	branch = drake
+[submodule "16_testing_pomdp_newpybind/pybind11"]
+	path = 16_testing_pomdp_newpybind/pybind11
+	url = https://github.com/RobotLocomotion/pybind11.git
+	branch = drake
