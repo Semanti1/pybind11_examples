@@ -192,14 +192,14 @@ public:
 // ----------------
 // Python interface
 // ----------------
-class PyState : public State
+/*class PyState : public State
 
 {
 public:
 
     // inherit the constructors
     using State::State;
-};
+};*/
 /*class PyActionPrior : public ActionPrior
 {
 public:
@@ -227,9 +227,17 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(example, m)
 {
-    py::class_<State>(m, "State",  py::dynamic_attr())
+    /*py::class_<State>(m, "State", py::dynamic_attr())
         .def(py::init<string>())
         .def(py::init<>())
+        .def_readwrite("name", &State::name);*/
+
+    
+    py::class_<State, PyState, std::shared_ptr<State>> state(m, "State", py::dynamic_attr());
+    state
+        .def(py::init<string>())
+        .def(py::init<>())
+        .def("getname", &State::getname)
         .def_readwrite("name", &State::name);
 
     py::class_<Belief>(m, "Belief")
@@ -238,11 +246,15 @@ PYBIND11_MODULE(example, m)
 
    
     
-    
-    py::class_<Action>(m, "Action", py::dynamic_attr())
+    py::class_<Action, PyAction, std::shared_ptr<Action>> action(m, "Action", py::dynamic_attr());
+    action
         .def(py::init<string>())
         .def(py::init<>())
         .def_readwrite("name", &Action::name);
+    /*py::class_<Action>(m, "Action", py::dynamic_attr())
+        .def(py::init<string>())
+        .def(py::init<>())
+        .def_readwrite("name", &Action::name);*/
 
     py::class_<Observation>(m, "Observation")
         .def(py::init<>());
@@ -258,16 +270,25 @@ PYBIND11_MODULE(example, m)
         .def("sample", &ObservationModel::sample)
         .def("argmax", &ObservationModel::argmax);
 
-    py::class_<TransitionModel, PyTransitionModel>(m, "TransitionModel")
+    /*py::class_<TransitionModel, PyTransitionModel>(m, "TransitionModel")
+        .def(py::init<>())
+        .def("probability", &TransitionModel::probability)
+        .def("sample", &TransitionModel::sample)
+        .def("argmax", &TransitionModel::argmax);*/
+    
+    py::class_<TransitionModel, PyTransitionModel, std::shared_ptr<TransitionModel>> tmodel(m, "TransitionModel");
+    tmodel
         .def(py::init<>())
         .def("probability", &TransitionModel::probability)
         .def("sample", &TransitionModel::sample)
         .def("argmax", &TransitionModel::argmax);
-    py::class_<RewardModel, PyRewardModel>(m,"RewardModel")
+    py::class_<RewardModel, PyRewardModel, std::shared_ptr<RewardModel>> rmodel(m, "RewardModel");
+    rmodel
         .def(py::init<>())
-        .def("probability", &RewardModel::probability)
-        .def("sample", &RewardModel::sample)
-        .def("argmax", &RewardModel::argmax);
+        //.def("probability", &RewardModel::probability)
+        .def("sample", &RewardModel::sample);
+        //.def("argmax", &RewardModel::argmax);
+
     py::class_<PolicyModel, PyPolicyModel>(m, "PolicyModel")
         .def(py::init<>())
         .def("probability", &PolicyModel::probability)
@@ -279,8 +300,21 @@ PYBIND11_MODULE(example, m)
         .def("rollout", &RolloutPolicy::rollout);
     
         
-    py::class_<Environment>(m, "Environment")
+    /*py::class_<Environment>(m, "Environment")
         .def(py::init<State*, TransitionModel*, RewardModel* >())
+        //.def(py::init<State&>())
+        .def("getstate", &Environment::getstate)
+        .def("transitionmodel", &Environment::transitionmodel)
+        .def("reward_model", &Environment::reward_model)
+        .def("state_transition", &Environment::state_transition)
+        .def("state_transition_sim", &Environment::state_transition_sim)
+        .def("apply_transition", &Environment::apply_transition)
+        .def("execute", &Environment::execute)
+        .def("provide_observation", &Environment::provide_observation);*/
+
+    py::class_<Environment, std::shared_ptr<Environment>>(m, "Environment")
+    
+        .def(py::init<std::shared_ptr<State>, std::shared_ptr<TransitionModel>, std::shared_ptr<RewardModel> >())
         //.def(py::init<State&>())
         .def("getstate", &Environment::getstate)
         .def("transitionmodel", &Environment::transitionmodel)
@@ -336,8 +370,8 @@ PYBIND11_MODULE(example, m)
         .def("isNormalized", &Histogram::isNormalized)
         .def("update_hist_belief", &Histogram::update_hist_belief);*/
     
-    m.def("sample_generative_model", &sample_generative_model, py::arg("agent"), py::arg("state"),py::arg("action"),py::arg("discount_factor")=1);
-    m.def("sample_explict_models1", &sample_explict_models1, py::arg("T"), py::arg("O"), py::arg("R"), py::arg("state"), py::arg("a"),py::arg("discount_factor")=1);
+    //m.def("sample_generative_model", &sample_generative_model, py::arg("agent"), py::arg("state"),py::arg("action"),py::arg("discount_factor")=1);
+    //m.def("sample_explict_models1", &sample_explict_models1, py::arg("T"), py::arg("O"), py::arg("R"), py::arg("state"), py::arg("a"),py::arg("discount_factor")=1);
     m.def("sample_explict_models", &sample_explict_models, py::arg("T"), py::arg("R"), py::arg("state"), py::arg("a"), py::arg("discount_factor")=1);
     /*py::class_<RandomRollout>(m, "RandomRollout")
         .def("rollout", &RandomRollout::rollout);*/

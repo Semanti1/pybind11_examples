@@ -205,7 +205,8 @@ if __name__ == "__main__":
     tst = env.getstate()
     print(isinstance(tst,TigerState),"after transition ", tst)
     print("checking state transition fn")
-    rew = env.state_transition(TigerAction("listen"),1)
+    rew = env.state_transition(TigerAction("listen"),1.0)
+    #rew = env.state_transition(a,1.0)
     print("reward", rew)
     #act.name_ = "p"
     real_observation = TigerObservation(str(tst))

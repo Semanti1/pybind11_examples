@@ -1,7 +1,7 @@
 #include "basics.h"
 #include <string>
-using namespace std;
-using std::string;
+
+
 #include <string>
 #include <iostream>
 #include <pybind11/pybind11.h>
@@ -9,6 +9,7 @@ using std::string;
 #include <map>
 #include <pybind11/stl.h>
 using namespace std;
+using std::string;
 //#include "pouct.h"
 class Planner {
 public:

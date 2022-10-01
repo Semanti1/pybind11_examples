@@ -8,6 +8,7 @@ using std::string;
 #include <map>
 #include <pybind11/stl.h>
 using namespace std;
+namespace py = pybind11;
 //#include "pouct.h"
 class VNode;
 class State
@@ -15,10 +16,13 @@ class State
 public:
     State(string name_) :name(name_) {}
     State() {}
+    virtual string getname() { return name; }
+    virtual ~State() { }
 
 //protected:
     string name;
 };
+
 class Observation
 {
 
@@ -33,7 +37,7 @@ class Action {
 public:
     Action(string n) :name(n) {}
     Action() {}
-    //virtual ~Action() {}
+    virtual ~Action() {}
     string name;
 //private:
     
@@ -74,32 +78,38 @@ public:
          State* state,
         Action* action) = 0;
 
-    virtual State* sample(State* state,
-        Action* action)=0;
+    //virtual State* sample(State* state,
+       // Action* action)=0;
+    virtual std::shared_ptr<State> sample(std::shared_ptr<State> state,
+        std::shared_ptr<Action> action) = 0;
     //virtual State* sample(const State* state,
       //   const Action* action) =0;
     State argmax(const State& state,
         const Action& action) {};
+    virtual ~TransitionModel() { }
 };
 
 class RewardModel {
 public:
-    double probability(double reward,
+    /*double probability(double reward,
         State* state,
-        Action* action, State* next_state) {};
+        Action* action, State* next_state) {};*/
 
     /*double sample(const State& state,
         const Action& action,
         const State& next_state) {};*/
 
-    virtual double sample(State* state,
+    /*virtual double sample(State* state,
         Action* action,
-        State* next_state) =0 ;
+        State* next_state) =0 ;*/
     
+    virtual double sample(std::shared_ptr<State> state,
+        std::shared_ptr<Action> action, std::shared_ptr<State> next_state) = 0;
 
-    double argmax(const State& state,
+    /*double argmax(const State& state,
         const Action& action,
-        const State& next_state) {};
+        const State& next_state) {};*/
+    virtual ~RewardModel() { }
 };
 
 class PolicyModel {
@@ -159,26 +169,29 @@ private:
 
 class Environment {
 public:
-    Environment(State* init_state, TransitionModel* T, RewardModel* R)
+    Environment(std::shared_ptr<State> init_state, std::shared_ptr<TransitionModel> T, std::shared_ptr<RewardModel> R)
         : state_(init_state), T_(T), R_(R) {}
+    //Environment(std::shared_ptr<State> init_state, std::shared_ptr<TransitionModel> T)//, std::shared_ptr<RewardModel> R)
+      //  : state_(init_state), T_(T) {}
     //Environment(State& init_state) : state_(init_state) {}
-    State* getstate();
+    std::shared_ptr<State> getstate();
     /*{
         cout << state_;
         return state_;
     };*/
-    TransitionModel* transitionmodel();
-    RewardModel* reward_model();
-    double state_transition(Action* action, float discount_factor = 1.0);
-    tuple<State*, double> state_transition_sim(Action* action, float discount_factor = 1.0);
-    void apply_transition(State* next_st);
-    tuple<Observation*, double> execute(Action* act, ObservationModel* Omodel);
-    Observation* provide_observation(ObservationModel* Omodel, Action* act);
+    std::shared_ptr<TransitionModel> transitionmodel();
+    std::shared_ptr<RewardModel> reward_model();
+    double state_transition(std::shared_ptr<Action> action, float discount_factor = 1.0);
+    tuple<std::shared_ptr<State>, double> state_transition_sim(std::shared_ptr <Action> action, float discount_factor = 1.0);
+    void apply_transition(std::shared_ptr<State> next_st);
+    tuple< std::shared_ptr<Observation>, double> execute(std::shared_ptr<Action> act, std::shared_ptr<ObservationModel> Omodel);
+    std::shared_ptr<Observation> provide_observation(std::shared_ptr<ObservationModel> Omodel, std::shared_ptr<Action> act);
+    virtual ~Environment() { }
 
 private:
-    State* state_;
-    TransitionModel* T_;
-    RewardModel* R_;
+    std::shared_ptr<State> state_;
+    std::shared_ptr<TransitionModel> T_;
+    std::shared_ptr<RewardModel> R_;
 };
 
 class Histogram : public Belief
@@ -207,7 +220,22 @@ public:
     string name;
     POMDP(Agent ag_, Environment env_, string name_) :agent(ag_), env(env_), name(name_) {}
 };*/
-
+class PyState : public py::wrapper<State> {
+public:
+    /* Inherit the constructors */
+    using py::wrapper<State>::wrapper;
+    std::string getname() override {
+        PYBIND11_OVERLOAD(std::string, State, getname);
+    }
+};
+class PyAction : public py::wrapper<Action> {
+public:
+    /* Inherit the constructors */
+    using py::wrapper<Action>::wrapper;
+    /*std::shared_ptr<Animal> go(int n_times) override {
+        PYBIND11_OVERLOAD_PURE(std::shared_ptr<Animal>, Animal, go, n_times);
+    }*/
+};
 class PyObservationModel : public ObservationModel
 {
 public:
@@ -253,13 +281,13 @@ public:
     }*/
 };
 
-class PyTransitionModel : public TransitionModel
+class PyTransitionModel : public py::wrapper<TransitionModel>
 {
 public:
 
     // inherit the constructors
-    using TransitionModel::TransitionModel;
-
+    //using TransitionModel::TransitionModel;
+    using py::wrapper<TransitionModel>::wrapper;
     // trampoline (one for each virtual function)
     double probability(State* next_state,
         State* state,
@@ -286,7 +314,7 @@ public:
         );
     }
     */
-    State* sample(State* state,
+    /*State* sample(State* state,
          Action* action) override {
         PYBIND11_OVERLOAD_PURE(
             State*, // Return type 
@@ -295,6 +323,10 @@ public:
             state,
             action
         );
+    }*/
+    std::shared_ptr<State> sample(std::shared_ptr<State> state,
+        std::shared_ptr<Action> action) override {
+        PYBIND11_OVERLOAD_PURE(std::shared_ptr<State>, TransitionModel, sample, state,action);
     }
     /*State argmax(const State& state,
         const Action& action) override {
@@ -309,12 +341,13 @@ public:
     }*/
 };
 
-class PyRewardModel : public RewardModel
+class PyRewardModel : public py::wrapper<RewardModel>
 {
 public:
 
     // inherit the constructors
-    using RewardModel::RewardModel;
+    //using RewardModel::RewardModel;
+    using py::wrapper<RewardModel>::wrapper;
 
     // trampoline (one for each virtual function)
     /*double probability(const Observation& observation,
@@ -330,17 +363,22 @@ public:
         );
     }*/
 
-    double sample(State* state, Action* action,
+    /*double sample(State* state, Action* action,
         State* next_state) override {
         PYBIND11_OVERLOAD_PURE(
-            double,  /*Return type */
-            RewardModel,      /* Parent class */
-            sample,        /* Name of function in C++ (must match Python name) */
+            double,  //Return type 
+            RewardModel,      // Parent class 
+            sample,        // Name of function in C++ (must match Python name) 
             state, 
-            action,           /* Argument(s) */
+            action,           // Argument(s) 
             next_state
             
         );
+    }*/
+
+    double sample(std::shared_ptr<State> state,
+        std::shared_ptr<Action> action, std::shared_ptr<State> next_state) override {
+        PYBIND11_OVERLOAD_PURE(double, RewardModel, sample, state, action, next_state);
     }
     /*  State argmax(const State& next_state,
           const Action& action) override {
@@ -421,15 +459,20 @@ public:
         );
     }
 };
-class PyEnvironment : public Environment
+/*class PyEnvironment : public Environment
 
 {
 public:
 
     // inherit the constructors
     using Environment::Environment;
+};*/
+class PyEnvironment : public py::wrapper<Environment> {
+public:
+    /* Inherit the constructors */
+    using py::wrapper<Environment>::wrapper;
+   
 };
-
 class PyAgent : public Agent
 
 {
@@ -440,5 +483,5 @@ public:
 };
 
 tuple<State*, Observation*, double, int> sample_generative_model(Agent* agent, State* state, Action* action, float discount_factor=1);
-tuple<State*, Observation*, double, int> sample_explict_models1(TransitionModel* T, ObservationModel* O, RewardModel* R, State* state, Action* a, float discount_factor=1);
-tuple<State*, double, int> sample_explict_models(TransitionModel* T, RewardModel* R, State* state, Action* a, float discount_factor=1);
+//tuple<State*, Observation*, double, int> sample_explict_models1(TransitionModel* T, ObservationModel* O, RewardModel* R, State* state, Action* a, float discount_factor=1);
+tuple<std::shared_ptr<State>, double, int> sample_explict_models(std::shared_ptr<TransitionModel> T, std::shared_ptr<RewardModel> R, std::shared_ptr<State> state, std::shared_ptr<Action> a, float discount_factor);

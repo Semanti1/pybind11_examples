@@ -182,45 +182,47 @@ vector<Action*>* Agent::validActions(State* state, History* history)
 	return state_;
 }
 */
-State* Environment::getstate() {
+std::shared_ptr<State> Environment::getstate() {
 	//cout << "HELLOOOOOO " <<endl;
 	return state_;
 }
-TransitionModel* Environment::transitionmodel()
+std::shared_ptr<TransitionModel> Environment::transitionmodel()
 {
 	return T_;
 }
 
-RewardModel* Environment::reward_model()
+std::shared_ptr<RewardModel> Environment::reward_model()
 {
 	return R_;
 }
 
-double Environment::state_transition(Action* action, float discount_factor)
+double Environment::state_transition(std::shared_ptr<Action> action, float discount_factor)
 {
-	tuple<State*, double, int> result;
-	TransitionModel* Tr = transitionmodel();
-	RewardModel* Re = reward_model();
-	State* st = getstate();
+	tuple<std::shared_ptr<State>, double, int> result;
+	std::shared_ptr<TransitionModel> Tr = transitionmodel();
+	std::shared_ptr<RewardModel> Re = reward_model();
+	std::shared_ptr<State> st = getstate();
 
 	//State* sampledst = Tr->sample(st, action);
 	//State& st = state_;
 	//result = sample_explict_models(transitionmodel(), reward_model(), getstate(), action, discount_factor);
+	cout << "B4 SAMPLE explicit" << endl;
 	result = sample_explict_models(Tr,Re, st, action, discount_factor);
+	cout << "After SAMPLE explicit" << endl;
 	apply_transition(get<0>(result));
 	return get<1>(result);
 	//return sampledst;
 }
 
-tuple<State*, double> Environment::state_transition_sim(Action* action, float discount_factor)
+tuple<std::shared_ptr<State>, double> Environment::state_transition_sim(std::shared_ptr<Action> action, float discount_factor)
 {
-	tuple<State*, double, int> result;
+	tuple<std::shared_ptr<State>, double, int> result;
 	result = sample_explict_models(transitionmodel(), reward_model(), state_, action, discount_factor);
-	tuple <State*, double> retRes(get<0>(result), get<1>(result));
+	tuple <std::shared_ptr<State>, double> retRes(get<0>(result), get<1>(result));
 	return retRes;
 }
 
-void Environment::apply_transition(State* next_st)
+void Environment::apply_transition(std::shared_ptr<State> next_st)
 {
 	//cout << "State now " << state_ << "next state : " << next_st << endl;
 	//State* temp = next_st;
@@ -230,31 +232,31 @@ void Environment::apply_transition(State* next_st)
 	
 }
 
-tuple<Observation*, double> Environment::execute(Action* act, ObservationModel* Omodel)
+tuple<std::shared_ptr<Observation>, double> Environment::execute(std::shared_ptr<Action> act, std::shared_ptr<ObservationModel> Omodel)
 {
 	double reward = state_transition(act);
-	Observation* obs = provide_observation(Omodel, act);
-	tuple<Observation*, double> result(obs, reward);
+	std::shared_ptr<Observation> obs = provide_observation(Omodel, act);
+	tuple<std::shared_ptr<Observation>, double> result(obs, reward);
 	return result;
 }
 
-Observation* Environment::provide_observation(ObservationModel* Omodel, Action* act)
+std::shared_ptr<Observation> Environment::provide_observation(std::shared_ptr<ObservationModel> Omodel, std::shared_ptr<Action> act)
 {
-	return Omodel->sample(getstate(), act);
+	//return Omodel->sample(getstate(), act);
 }
 
 tuple<State*, Observation*, double, int> sample_generative_model(Agent* agent, State* state, Action* action, float discount_factor)
 {
 
 	tuple<State*, Observation*, double, int> result;
-	result = sample_explict_models1(agent->getTransModel(), agent->getObsModel(), agent->getRewardModel(), state, action, discount_factor);
+	//result = sample_explict_models1(agent->getTransModel(), agent->getObsModel(), agent->getRewardModel(), state, action, discount_factor);
 	return result;
 }
 
-tuple<State*, Observation*, double, int> sample_explict_models1(TransitionModel* T, ObservationModel* O, RewardModel* R, State* state, Action* a, float discount_factor)
+/*tuple<State*, Observation*, double, int> sample_explict_models1(TransitionModel* T, ObservationModel* O, RewardModel* R, State* state, Action* a, float discount_factor)
 {
 	int nsteps = 0;
-	State* next_st = T->sample(state, a);
+	std::shared_ptr<State> next_st = T->sample(state, a);
 	cout << "Done transitioning to ns" << endl;
 	double reward = R->sample(state, a, next_st);
 	nsteps += 1;
@@ -263,18 +265,18 @@ tuple<State*, Observation*, double, int> sample_explict_models1(TransitionModel*
 	return res;
 
 
-}
+}*/
 
-tuple<State*, double, int> sample_explict_models(TransitionModel* T, RewardModel* R, State* state, Action* a, float discount_factor)
+tuple<std::shared_ptr<State>, double, int> sample_explict_models(std::shared_ptr<TransitionModel> T, std::shared_ptr<RewardModel> R, std::shared_ptr<State> state, std::shared_ptr<Action> a, float discount_factor)
 {
 	int nsteps = 0;
 	//State next_st = T.sample(&(*state), a);
-	State* next_st = T->sample(state, a);
-	cout << "next st sampled" << endl;
+	std::shared_ptr<State> next_st = T->sample(state, a);
+	cout << "next st sampled " << next_st << endl;
 	double reward = R->sample(state, a, next_st);
 	cout << "Reward " << reward << endl;
 	nsteps += 1;
-	tuple<State*, double, int> res(next_st, reward, nsteps);
+	tuple<std::shared_ptr<State>, double, int> res(next_st, reward, nsteps);
 	return res;
 	//tuple<State*, double, int> res(next_st, 0, nsteps);
 	//return res;
