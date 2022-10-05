@@ -177,6 +177,8 @@ if __name__ == "__main__":
     ACTIONS = {TigerAction(s)
               for s in {"open-left", "open-right", "listen"}}
     print(ACTIONS)
+    T = TTransitionModel()
+    R=TRewardModel()
     OBSERVATIONS = [TigerObservation(s)
                 for s in {"tiger-left", "tiger-right"}]
     print(OBSERVATIONS)
@@ -205,9 +207,11 @@ if __name__ == "__main__":
     tst = env.getstate()
     print(isinstance(tst,TigerState),"after transition ", tst)
     print("checking state transition fn")
-    rew = env.state_transition(TigerAction("listen"),1.0)
-    #rew = env.state_transition(a,1.0)
-    print("reward", rew)
+    #rew = env.state_transition(TigerAction("listen"),1.0)
+    print("before transition",env.getstate())
+    rew = env.state_transition(a,1.0)
+    print("after transition",env.getstate())
+    #print("reward", rew)
     #act.name_ = "p"
     real_observation = TigerObservation(str(tst))
     print(repr(real_observation))
@@ -228,10 +232,10 @@ if __name__ == "__main__":
     act = ActionPrior
     pouct = POUCT(3,1,4096,0.9,1.4,0,0,agent.getPolicyModel(),True,5)
     #actplan = pouct.plan(agent)
-    #agent.gethistory()
-    #sim_obs = env.provide_observation(O,TigerAction("listen"))
-    #print("sim obs",repr(sim_obs))
-    #print("env test ",env.state_transition(act,1.0))
+    agent.gethistory()
+    sim_obs = env.provide_observation(O,TigerAction("listen"))
+    print("sim obs",repr(sim_obs))
+    print("env test ",env.state_transition(act,1.0))
     
 
 

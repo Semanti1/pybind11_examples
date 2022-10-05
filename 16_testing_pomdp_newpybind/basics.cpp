@@ -271,13 +271,15 @@ tuple<std::shared_ptr<State>, double, int> sample_explict_models(std::shared_ptr
 {
 	int nsteps = 0;
 	//State next_st = T.sample(&(*state), a);
-	std::shared_ptr<State> next_st = T->sample(state, a);
-	cout << "next st sampled " << next_st << endl;
-	double reward = R->sample(state, a, next_st);
+	//std::shared_ptr<State> next_st = T->sample(state, a);
+	std::shared_ptr<State> next_st(T->sample(state, a));
+	cout << "next st sampled 1233333 " << typeid(next_st).name() << " st " << typeid(state).name()<< endl;
+	double reward = R->sample(state.get(), a.get(), next_st.get());
 	cout << "Reward " << reward << endl;
 	nsteps += 1;
 	tuple<std::shared_ptr<State>, double, int> res(next_st, reward, nsteps);
 	return res;
+	//return null;
 	//tuple<State*, double, int> res(next_st, 0, nsteps);
 	//return res;
 }

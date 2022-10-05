@@ -27,7 +27,7 @@ Action* VNode::argmax()
 	float best_val = 0;// -INFINITY;
 	//best_action = nullptr;
 	bool it = children.empty();
-	/*cout << "HELLOO1" << " size " << children.size() << endl;
+	cout << "HELLOO1" << " size " << children.size() << endl;
 	for (auto const& x : children)
 	{
 		cout << "HELLOO2" << endl;
@@ -39,7 +39,7 @@ Action* VNode::argmax()
 			cout << "HELLOO4" << endl;
 		}
 	}
-	return best_action;*/
+	return best_action;
 }
 
 RootVNode RootVNode::from_vnode(VNode* vnode, History* hist)
@@ -140,8 +140,8 @@ double POUCT::_simulate(State* state, History* history, VNode* root, QNode* pare
 		return rollout_reward;
 	}
 	int nsteps;
-	//Action* action = _ucb(root);
-	/*tuple<State*, Observation*, double, int> generated = sample_generative_model(_agent, state, action);
+	Action* action = _ucb(root);
+	tuple<State*, Observation*, double, int> generated = sample_generative_model(_agent, state, action);
 	State* next_state = get<0>(generated);
 	Observation* obs = get<1>(generated);
 	double rd = get<2>(generated);
@@ -153,8 +153,8 @@ double POUCT::_simulate(State* state, History* history, VNode* root, QNode* pare
 	root->num_visits += 1;
 	root->children[action]->num_visits += 1;
 	root->children[action]->value = root->children[action]->value + (total_reward - (root->children[action]->value)) / (root->children[action]->num_visits);
-	return total_reward;*/
-	return 0;
+	return total_reward;
+	//return 0;
 }
 
 VNode* POUCT::_VNode(Agent* agent, bool root)
@@ -175,7 +175,7 @@ void POUCT::_expand_vnode(VNode* vnode, History* history, State* state)
 	 vector<Action*>* actlist = _agent->validActions(state, history);
 	cout << "size vect " << int((*(actlist)).size()) << endl;
 	//cout << "Agent" << (*actlist.begin())->name << endl;
-	/*for (auto it : *actlist) {
+	for (auto it : *actlist) {
 		if (!vnode->children.count(it))
 		{
 			cout << "act name"<<it->name << endl;
@@ -185,7 +185,7 @@ void POUCT::_expand_vnode(VNode* vnode, History* history, State* state)
 			vnode->children[it] = newqnode;
 		}
 
-	}*/
+	}
 	cout << "num child" << (vnode->children).size()<<endl;
 }
 
@@ -223,10 +223,10 @@ Action* POUCT::_ucb(VNode* root)
 	float best_value = -INFINITY;
 	double val;
 	std::map<Action*, QNode*> rtchld(root->children);
-	/*for (auto const& i : root->children)
+	for (auto const& i : root->children)
 	{
 		Action* act = i.first;
-		/*if (root->children[act]->num_visits == 0)
+		if (root->children[act]->num_visits == 0)
 		{
 			val = INFINITY;
 		}
@@ -240,9 +240,9 @@ Action* POUCT::_ucb(VNode* root)
 			best_value = val;
 		}
 		best_action = act;
-	}*/
-	//return best_action;
-	return nullptr;
+	}
+	return best_action;
+	//return nullptr;
 
 }
 

@@ -103,8 +103,8 @@ public:
         Action* action,
         State* next_state) =0 ;*/
     
-    virtual double sample(std::shared_ptr<State> state,
-        std::shared_ptr<Action> action, std::shared_ptr<State> next_state) = 0;
+    virtual double sample(State* state,
+       Action* action, State* next_state) = 0;
 
     /*double argmax(const State& state,
         const Action& action,
@@ -376,8 +376,8 @@ public:
         );
     }*/
 
-    double sample(std::shared_ptr<State> state,
-        std::shared_ptr<Action> action, std::shared_ptr<State> next_state) override {
+    double sample(State* state,
+        Action* action, State* next_state) override {
         PYBIND11_OVERLOAD_PURE(double, RewardModel, sample, state, action, next_state);
     }
     /*  State argmax(const State& next_state,
