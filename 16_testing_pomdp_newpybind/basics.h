@@ -11,8 +11,7 @@ using namespace std;
 namespace py = pybind11;
 //#include "pouct.h"
 class VNode;
-class State
-{
+class State {
 public:
     State(string name_) :name(name_) {}
     State() {}
@@ -23,8 +22,7 @@ public:
     string name;
 };
 
-class Observation
-{
+class Observation {
 
 };
 class Belief {
@@ -194,8 +192,7 @@ private:
     std::shared_ptr<RewardModel> R_;
 };
 
-class Histogram : public Belief
-{
+class Histogram : public Belief {
 private:
     std::map<State*, float> _histogram;
 public:
@@ -236,12 +233,11 @@ public:
         PYBIND11_OVERLOAD_PURE(std::shared_ptr<Animal>, Animal, go, n_times);
     }*/
 };
-class PyObservationModel : public ObservationModel
-{
+class PyObservationModel : public py::wrapper<ObservationModel> {
 public:
 
     // inherit the constructors
-    using ObservationModel::ObservationModel;
+    using py::wrapper<ObservationModel>::wrapper;
 
     // trampoline (one for each virtual function)
     double probability(Observation* observation,
@@ -281,8 +277,7 @@ public:
     }*/
 };
 
-class PyTransitionModel : public py::wrapper<TransitionModel>
-{
+class PyTransitionModel : public py::wrapper<TransitionModel> {
 public:
 
     // inherit the constructors
@@ -393,12 +388,12 @@ public:
       }*/
 };
 
-class PyPolicyModel : public PolicyModel
+class PyPolicyModel : public py::wrapper<PolicyModel>
 {
 public:
 
     // inherit the constructors
-    using PolicyModel::PolicyModel;
+    using py::wrapper<PolicyModel>::wrapper;
 
     /*virtual double probability(Action* action,
         State* state
@@ -473,13 +468,13 @@ public:
     using py::wrapper<Environment>::wrapper;
    
 };
-class PyAgent : public Agent
+class PyAgent : public py::wrapper<Agent>
 
 {
 public:
 
     // inherit the constructors
-    using Agent::Agent;
+    using py::wrapper<Agent>::wrapper;
 };
 
 tuple<State*, Observation*, double, int> sample_generative_model(Agent* agent, State* state, Action* action, float discount_factor=1);
