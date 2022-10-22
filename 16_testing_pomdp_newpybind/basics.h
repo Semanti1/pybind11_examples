@@ -7,16 +7,21 @@ using std::string;
 #include <list>
 #include <map>
 #include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 using namespace std;
 namespace py = pybind11;
 //#include "pouct.h"
+
+
+
+
 class VNode;
 class State {
 public:
     State(string name_) :name(name_) {}
     State() {}
     virtual string getname() { return name; }
-    virtual ~State() { }
+    
 
 //protected:
     string name;
@@ -27,7 +32,7 @@ class Observation {
 };
 class Belief {
 public:
-   virtual State* random() = 0;
+   virtual std::shared_ptr<State> random() = 0;
 };
 
 
@@ -38,32 +43,32 @@ public:
     virtual ~Action() {}
     string name;
 //private:
-    
 };
+// PYBIND11_MAKE_OPAQUE(std::vector<Action>); // converison error for pybind with std::vector need OPAQUE to make a std::vector be shared
 class History {
 
 public:
     History() :history() {}
    
-    void add(Action* act, Observation* obs);
-    History(list< tuple<Action*, Observation*>> _history) :history(_history) {}
+    void add(std::shared_ptr<Action> act, std::shared_ptr<Observation> obs);
+    History(list< tuple<std::shared_ptr<Action>, std::shared_ptr<Observation>>> _history) :history(_history) {}
 
 private:
     //Action action;
     //Observation obs;
-    list< tuple<Action*, Observation*>> history;
+    list< tuple<std::shared_ptr<Action>, std::shared_ptr<Observation>>> history;
 
 
 };
 
 class ObservationModel {
 public:
-    virtual double probability(Observation* observation,
-        State* next_state,
-        Action* action) = 0;
+    virtual double probability(std::shared_ptr<Observation> observation,
+        std::shared_ptr<State> next_state,
+        std::shared_ptr<Action> action) = 0;
 
-    virtual Observation* sample(State* next_state,
-        Action* action) = 0;
+    virtual std::shared_ptr<Observation> sample(std::shared_ptr<State> next_state,
+        std::shared_ptr<Action> action) = 0;
 
     State argmax(const State& next_state,
         const Action& action) {};
@@ -72,9 +77,9 @@ public:
 class TransitionModel {
 public:
     //TransitionModel() {};
-    virtual double probability(State* next_state,
-         State* state,
-        Action* action) = 0;
+    virtual double probability(std::shared_ptr<State> next_state,
+         std::shared_ptr<State> state,
+        std::shared_ptr<Action> action) = 0;
 
     //virtual State* sample(State* state,
        // Action* action)=0;
@@ -101,8 +106,8 @@ public:
         Action* action,
         State* next_state) =0 ;*/
     
-    virtual double sample(State* state,
-       Action* action, State* next_state) = 0;
+    virtual double sample(std::shared_ptr<State> state,
+       std::shared_ptr<Action> action, std::shared_ptr<State> next_state) = 0;
 
     /*double argmax(const State& state,
         const Action& action,
@@ -112,14 +117,14 @@ public:
 
 class PolicyModel {
 public:
-    virtual double probability(Action* action,
-        State* state
+    virtual double probability(std::shared_ptr<Action> action,
+        std::shared_ptr<State> state
     ) {};
 
-    virtual Action* sample(State* state) {};
-    double argmax(const State* state) {};
+    virtual std::shared_ptr<Action> sample(std::shared_ptr<State> state) {};
+    double argmax(const std::shared_ptr<State> state) {};
     //virtual list<Action> getAllActions(State& state) = 0;
-    virtual vector<Action*>* get_all_actions(State* state, History* history) {};
+    virtual vector<std::shared_ptr<Action>>* get_all_actions(std::shared_ptr<State> state, std::shared_ptr<History> history) {};
 
 
 };
@@ -127,11 +132,12 @@ public:
 class Agent {
 public:
     //VNode& tree(nullptr);
-    Agent(Belief* init_belief, PolicyModel* pi, TransitionModel* T,
-        ObservationModel* O, RewardModel* R)
+    Agent(std::shared_ptr<Belief> init_belief, std::shared_ptr<PolicyModel> pi, std::shared_ptr<TransitionModel> T,
+        std::shared_ptr<ObservationModel> O, std::shared_ptr<RewardModel> R)
         : belief_(init_belief), pi_(pi), T_(T), O_(O), R_(R) {
         _cur_belief = init_belief;
-         hist = new History();
+        // hist = new History();
+        std::shared_ptr<History> hist(new History());
     }
     Agent() {}
     /*Agent(PolicyModel* pi, TransitionModel* T,
@@ -140,29 +146,29 @@ public:
        // _cur_belief = init_belief;
         hist = new History();
     }*/
-    History* gethistory();
-    void update_hist(Action* act, Observation* obs);
-    Belief* init_belief();
-    Belief* belief();
-    Belief* cur_belief();
-    void setbelief(Belief* bel, bool prior);
-    State* sample_belief();
-    ObservationModel* getObsModel();
-    TransitionModel* getTransModel();
-    RewardModel* getRewardModel();
-    PolicyModel* getPolicyModel();
+    std::shared_ptr<History> gethistory();
+    void update_hist(std::shared_ptr<Action> act, std::shared_ptr<Observation> obs);
+    std::shared_ptr<Belief> init_belief();
+    std::shared_ptr<Belief> belief();
+    std::shared_ptr<Belief> cur_belief();
+    void setbelief(std::shared_ptr<Belief> bel, bool prior);
+    std::shared_ptr<State> sample_belief();
+    std::shared_ptr<ObservationModel> getObsModel();
+    std::shared_ptr<TransitionModel> getTransModel();
+    std::shared_ptr<RewardModel> getRewardModel();
+    std::shared_ptr<PolicyModel> getPolicyModel();
     //virtual void update(Action* act, Observation* obs);
-    std::vector<Action*>* validActions(State* state, History* history);
+    std::vector<std::shared_ptr<Action>>* validActions(std::shared_ptr<State> state, std::shared_ptr<History> history);
     //History hist;
-    //virtual ~Agent();
+    // virtual ~Agent();
 private:
-    Belief* belief_;
-    TransitionModel* T_;
-    ObservationModel* O_;
-    RewardModel* R_;
-    PolicyModel* pi_;
-    History* hist;
-    Belief* _cur_belief;
+    std::shared_ptr<Belief> belief_;
+    std::shared_ptr<TransitionModel> T_;
+    std::shared_ptr<ObservationModel> O_;
+    std::shared_ptr<RewardModel> R_;
+    std::shared_ptr<PolicyModel> pi_;
+    std::shared_ptr<History> hist;
+    std::shared_ptr<Belief> _cur_belief;
 };
 
 class Environment {
@@ -194,20 +200,21 @@ private:
 
 class Histogram : public Belief {
 private:
-    std::map<State*, float> _histogram;
-public:
-    Histogram(std::map<State*, float> histogram) :_histogram(histogram) {}
-    std::map<State*, float> getHist();
-    int lenHist();
-    float getitem(State* st);
-    void setitem(State* st, float prob);
-    bool isEq(Histogram* b);
-    State* mpe();
-    State* random();
-    bool isNormalized(double eps);
-    Histogram* update_hist_belief(Action* real_act, Observation* real_obs, ObservationModel* O, TransitionModel* T, bool normalize, bool static_transition);
-    //Histogram update_hist_belief(Histogram current_hist, Action real_act, Observation real_obs, ObservationModel O, TransitionModel T, bool normalize = true, bool static_transition = false);
+    std::map<std::shared_ptr<State>, float> _histogram;
 
+public:
+    Histogram(std::map<std::shared_ptr<State>, float> histogram) : _histogram(histogram) {}
+    std::map<std::shared_ptr<State>, float> getHist();
+    int lenHist();
+    float getitem(std::shared_ptr<State> st);
+    void setitem(std::shared_ptr<State> st, float prob);
+    bool isEq(std::shared_ptr<Histogram> b);
+    std::shared_ptr<State> mpe();
+    std::shared_ptr<State> random();
+    bool isNormalized(double eps);
+    std::shared_ptr<Histogram> update_hist_belief(std::shared_ptr<Action> real_act, std::shared_ptr<Observation> real_obs, std::shared_ptr<ObservationModel> O, std::shared_ptr<TransitionModel> T, bool normalize, bool static_transition);
+    //Histogram update_hist_belief(Histogram current_hist, Action real_act, Observation real_obs, ObservationModel O, TransitionModel T, bool normalize = true, bool static_transition = false);
+    // virtual ~Histogram() { }
 
 };
 /*class POMDP {
@@ -240,9 +247,9 @@ public:
     using py::wrapper<ObservationModel>::wrapper;
 
     // trampoline (one for each virtual function)
-    double probability(Observation* observation,
-        State* next_state,
-        Action* action) override {
+    double probability(std::shared_ptr<Observation> observation,
+        std::shared_ptr<State> next_state,
+        std::shared_ptr<Action> action) override {
         PYBIND11_OVERLOAD_PURE(
             double, /* Return type */
             ObservationModel,      /* Parent class */
@@ -253,10 +260,10 @@ public:
         );
     }
 
-    Observation* sample(State* next_state,
-        Action* action) override {
+    std::shared_ptr<Observation> sample(std::shared_ptr<State> next_state,
+        std::shared_ptr<Action> action) override {
         PYBIND11_OVERLOAD_PURE(
-            Observation*,  /*Return type */
+            std::shared_ptr<Observation>,  /*Return type */
             ObservationModel,      /* Parent class */
             sample,        /* Name of function in C++ (must match Python name) */
                            /* Argument(s) */
@@ -284,9 +291,9 @@ public:
     //using TransitionModel::TransitionModel;
     using py::wrapper<TransitionModel>::wrapper;
     // trampoline (one for each virtual function)
-    double probability(State* next_state,
-        State* state,
-        Action* action) override {
+    double probability(std::shared_ptr<State> next_state,
+        std::shared_ptr<State> state,
+        std::shared_ptr<Action> action) override {
         PYBIND11_OVERLOAD_PURE(
             double, /* Return type */
             TransitionModel,      /* Parent class */
@@ -371,8 +378,8 @@ public:
         );
     }*/
 
-    double sample(State* state,
-        Action* action, State* next_state) override {
+    double sample(std::shared_ptr<State> state,
+        std::shared_ptr<Action> action, std::shared_ptr<State> next_state) override {
         PYBIND11_OVERLOAD_PURE(double, RewardModel, sample, state, action, next_state);
     }
     /*  State argmax(const State& next_state,
@@ -405,8 +412,8 @@ public:
     virtual vector<Action*> get_all_actions(State* state, History* history) = 0;*/
 
     // trampoline (one for each virtual function)
-    double probability(Action* action,
-        State* state
+    double probability(std::shared_ptr<Action> action,
+        std::shared_ptr<State> state
         ) override {
         PYBIND11_OVERLOAD(
             double, /* Return type */
@@ -418,10 +425,10 @@ public:
         );
     }
 
-    Action* sample(State* state
+    std::shared_ptr<Action> sample(std::shared_ptr<State> state
         ) override {
         PYBIND11_OVERLOAD(
-            Action*,  /*Return type */
+            std::shared_ptr<Action>,  /*Return type */
             PolicyModel,      /* Parent class */
             sample,        /* Name of function in C++ (must match Python name) */
                            /* Argument(s) */
@@ -441,10 +448,10 @@ public:
           );
       }*/
 
-    vector<Action*>* get_all_actions(State* state, History* history
+    vector<std::shared_ptr<Action>>* get_all_actions(std::shared_ptr<State> state, std::shared_ptr<History> history
     ) override {
         PYBIND11_OVERLOAD(
-            vector<Action*>*,  /*Return type */
+            vector<std::shared_ptr<Action>>*,  /*Return type */
             PolicyModel,      /* Parent class */
             get_all_actions,        /* Name of function in C++ (must match Python name) */
                            /* Argument(s) */
@@ -468,15 +475,31 @@ public:
     using py::wrapper<Environment>::wrapper;
    
 };
-class PyAgent : public py::wrapper<Agent>
-
-{
-public:
+class PyAgent : public py::wrapper<Agent> {
+    public:
 
     // inherit the constructors
     using py::wrapper<Agent>::wrapper;
 };
 
-tuple<State*, Observation*, double, int> sample_generative_model(Agent* agent, State* state, Action* action, float discount_factor=1);
+class PyHistogram : public py::wrapper<Histogram> {
+    public:
+    /* Inherit the constructors */
+    using py::wrapper<Histogram>::wrapper;
+};
+
+class PyBelief : public py::wrapper<Belief> {
+    public:
+    /* Inherit the constructors */
+    using py::wrapper<Belief>::wrapper;
+};
+
+// class PyObservation : public py::wrapper<Observation> {
+//     public:
+//     // /* Inherit the constructors */
+//     // using py::wrapper<Observation>::wrapper;
+// };
+
+tuple<std::shared_ptr<State>, std::shared_ptr<Observation>, double, int> sample_generative_model(std::shared_ptr<Agent> agent, std::shared_ptr<State> state, std::shared_ptr<Action> action, float discount_factor=1);
 //tuple<State*, Observation*, double, int> sample_explict_models1(TransitionModel* T, ObservationModel* O, RewardModel* R, State* state, Action* a, float discount_factor=1);
 tuple<std::shared_ptr<State>, double, int> sample_explict_models(std::shared_ptr<TransitionModel> T, std::shared_ptr<RewardModel> R, std::shared_ptr<State> state, std::shared_ptr<Action> a, float discount_factor);

@@ -12,7 +12,7 @@ using namespace std;
 	_histogram = histogram;
 }*/
 
-std::map<State*, float> Histogram::getHist()
+std::map<std::shared_ptr<State>, float> Histogram::getHist()
 {
 	return _histogram;
 }
@@ -20,32 +20,32 @@ int Histogram::lenHist()
 {
 	return _histogram.size();
 }
-float Histogram::getitem(State* st)
+float Histogram::getitem(std::shared_ptr<State> st)
 {
 	return _histogram[st];
 }
-void Histogram::setitem(State* st, float prob)
+void Histogram::setitem(std::shared_ptr<State> st, float prob)
 {
 	_histogram[st] = prob;
 }
-bool Histogram::isEq(Histogram* b)
+bool Histogram::isEq(std::shared_ptr<Histogram> b)
 {
 	return (_histogram == ( b->getHist()));
 }
-State* Histogram::mpe()
+std::shared_ptr<State> Histogram::mpe()
 {
 	//From here: https://stackoverflow.com/questions/30611709/find-element-with-max-value-from-stdmap
 
 	auto x = std::max_element((_histogram).begin(), (_histogram).end(),
-		[](const pair<State*, float>& p1, const pair<State*, float>& p2) {
+		[](const pair<std::shared_ptr<State>, float>& p1, const pair<std::shared_ptr<State>, float>& p2) {
 			return p1.second < p2.second; });
 	return x->first;
 }
-State* Histogram::random()
+std::shared_ptr<State> Histogram::random()
 {
 	auto sel = _histogram.begin();
 	std::advance(sel, rand() % _histogram.size());
-	State* random_key = sel->first;
+	std::shared_ptr<State> random_key = sel->first;
 	return random_key;
 }
 bool Histogram::isNormalized(double eps = 1e-9)
@@ -61,9 +61,9 @@ bool Histogram::isNormalized(double eps = 1e-9)
 		return false;
 }
 
-Histogram* Histogram::update_hist_belief(Action* real_act, Observation* real_obs, ObservationModel* O, TransitionModel* T, bool normalize = true, bool static_transition = false)
+std::shared_ptr<Histogram> Histogram::update_hist_belief(std::shared_ptr<Action> real_act, std::shared_ptr<Observation> real_obs, std::shared_ptr<ObservationModel> O, std::shared_ptr<TransitionModel> T, bool normalize = true, bool static_transition = false)
 {
-	std::map<State*, float> new_histogram;
+	std::map<std::shared_ptr<State>, float> new_histogram;
 	double total_prob = 0;
 	for (auto const& next_state : _histogram)
 	{
@@ -94,46 +94,48 @@ Histogram* Histogram::update_hist_belief(Action* real_act, Observation* real_obs
 			}
 		}
 	}
-	Histogram* updatedhist = new  Histogram(new_histogram);
+	std::shared_ptr<Histogram> updatedhist(new Histogram(new_histogram));
+	// std::shared_ptr<Histogram> updatedhist = std::shared_ptr<Histogram> historgam(new Histogram(new_histogram));
 	return updatedhist;
-	//return Histogram(new_histogram);
+	// return Histogram(new_histogram);
 }
 
 
-History* Agent::gethistory()
+std::shared_ptr<History> Agent::gethistory()
 {
 	//cout << hist->history << endl;
-	return hist;
+	std::shared_ptr<History> sharedHist(hist);
+	return sharedHist;
 }
-void History::add(Action* act, Observation* obs)
+void History::add(std::shared_ptr<Action> act, std::shared_ptr<Observation> obs)
 {
-	tuple<Action*, Observation*> newpair;
+	tuple<std::shared_ptr<Action>, std::shared_ptr<Observation>> newpair;
 	newpair = make_tuple(act, obs);
 	history.push_back(newpair);
 	//cout << get<0>(history.front()) << endl;
 }
-void Agent::update_hist(Action* act, Observation* obs)
+void Agent::update_hist(std::shared_ptr<Action> act, std::shared_ptr<Observation> obs)
 {
 	hist->add(act, obs);
 }
 
-Belief* Agent::init_belief()
+std::shared_ptr<Belief> Agent::init_belief()
 {
 	return belief_;
 }
 
-Belief* Agent::belief()
+std::shared_ptr<Belief> Agent::belief()
 {
 	return _cur_belief;
 }
 
-Belief* Agent::cur_belief()
+std::shared_ptr<Belief> Agent::cur_belief()
 {
 	return 	_cur_belief;
 	
 }
 
-void Agent::setbelief(Belief* bel, bool prior)
+void Agent::setbelief(std::shared_ptr<Belief> bel, bool prior)
 {
 	_cur_belief = bel;
 	if (prior)
@@ -142,28 +144,28 @@ void Agent::setbelief(Belief* bel, bool prior)
 	}
 }
 
-State* Agent::sample_belief()
+std::shared_ptr<State> Agent::sample_belief()
 {
 	//return State();
 	return _cur_belief->random();
 }
 
-ObservationModel* Agent::getObsModel()
+std::shared_ptr<ObservationModel> Agent::getObsModel()
 {
 	return O_;
 }
 
-TransitionModel* Agent::getTransModel()
+std::shared_ptr<TransitionModel> Agent::getTransModel()
 {
 	return T_;
 }
 
-RewardModel* Agent::getRewardModel()
+std::shared_ptr<RewardModel> Agent::getRewardModel()
 {
 	return R_;
 }
 
-PolicyModel* Agent::getPolicyModel()
+std::shared_ptr<PolicyModel> Agent::getPolicyModel()
 {
 	return pi_;
 }
@@ -172,7 +174,7 @@ PolicyModel* Agent::getPolicyModel()
 {
 }*/
 
-vector<Action*>* Agent::validActions(State* state, History* history)
+vector<std::shared_ptr<Action>>* Agent::validActions(std::shared_ptr<State> state, std::shared_ptr<History> history)
 {
 	return pi_->get_all_actions(state, history);
 }
@@ -245,10 +247,10 @@ std::shared_ptr<Observation> Environment::provide_observation(std::shared_ptr<Ob
 	//return Omodel->sample(getstate(), act);
 }
 
-tuple<State*, Observation*, double, int> sample_generative_model(Agent* agent, State* state, Action* action, float discount_factor)
+tuple<std::shared_ptr<State>, std::shared_ptr<Observation>, double, int> sample_generative_model(std::shared_ptr<Agent> agent, std::shared_ptr<State> state, std::shared_ptr<Action> action, float discount_factor)
 {
 
-	tuple<State*, Observation*, double, int> result;
+	tuple<std::shared_ptr<State>, std::shared_ptr<Observation>, double, int> result;
 	//result = sample_explict_models1(agent->getTransModel(), agent->getObsModel(), agent->getRewardModel(), state, action, discount_factor);
 	return result;
 }
@@ -274,7 +276,7 @@ tuple<std::shared_ptr<State>, double, int> sample_explict_models(std::shared_ptr
 	//std::shared_ptr<State> next_st = T->sample(state, a);
 	std::shared_ptr<State> next_st(T->sample(state, a));
 	cout << "next st sampled 1233333 " << typeid(next_st).name() << " st " << typeid(state).name()<< endl;
-	double reward = R->sample(state.get(), a.get(), next_st.get());
+	double reward = R->sample(state, a, next_st);
 	cout << "Reward " << reward << endl;
 	nsteps += 1;
 	tuple<std::shared_ptr<State>, double, int> res(next_st, reward, nsteps);

@@ -20,10 +20,10 @@ RootVNode::RootVNode(int nvisit, History hist) :VNode(nvisit)
 	history = hist;
 	num_visits = nvisit;
 }*/
-Action* VNode::argmax()
+std::shared_ptr<Action> VNode::argmax()
 {
-	Action* action;
-	Action* best_action;
+	std::shared_ptr<Action> action;
+	std::shared_ptr<Action> best_action;
 	float best_val = 0;// -INFINITY;
 	//best_action = nullptr;
 	bool it = children.empty();
@@ -42,7 +42,7 @@ Action* VNode::argmax()
 	return best_action;
 }
 
-RootVNode RootVNode::from_vnode(VNode* vnode, History* hist)
+RootVNode RootVNode::from_vnode(std::shared_ptr<VNode> vnode, std::shared_ptr<History> hist)
 {
 	//RootVNode rootnode = new RootVNode(vnode.num_visits, history);
 	RootVNode rootnode(vnode->num_visits, hist);
@@ -50,11 +50,11 @@ RootVNode RootVNode::from_vnode(VNode* vnode, History* hist)
 	return rootnode;
 }
 
-Action* POUCT::plan(Agent* agent)
+std::shared_ptr<Action> POUCT::plan(std::shared_ptr<Agent> agent)
 {
 
 	_agent = agent;
-	tuple<Action*, float, int> planned_act = _search();
+	tuple<std::shared_ptr<Action>, float, int> planned_act = _search();
 	_last_num_sims = get<2>(planned_act);
 	_last_planning_time = get<1>(planned_act);
 
@@ -63,11 +63,11 @@ Action* POUCT::plan(Agent* agent)
 
 }
 
-tuple<Action*, double, int> POUCT::_search()
+tuple<std::shared_ptr<Action>, double, int> POUCT::_search()
 {
 	std::chrono::time_point<std::chrono::system_clock> start_time;
-	State* state;
-	Action* best_action;
+	std::shared_ptr<State> state;
+	std::shared_ptr<Action> best_action;
 	
 	int sims_count = 0;
 	double time_taken = 0;
@@ -94,17 +94,17 @@ tuple<Action*, double, int> POUCT::_search()
 	}
 	cout << "OUT OF WHILE LOOP" << endl;
 	//cout << dynamic_cast<RootVNode*>(tree)->num_visits << endl;
-	std::map<Action*, QNode*> a = tree->children;
+	std::map<std::shared_ptr<Action>, std::shared_ptr<QNode>> a = tree->children;
 	//cout << "Tree empty" << ((*tree).children) << endl;
 	//best_action = tree->argmax();
 	//tuple<Action*, double, int> result(best_action, time_taken, sims_count);
 	//return make_tuple<best_action, time_taken, sims_count>;
 	//return result;
-	tuple<Action*, double, int> result(nullptr, 0, 0);
+	tuple<std::shared_ptr<Action>, double, int> result(nullptr, 0, 0);
 	return result;
 }
 
-double POUCT::_simulate(State* state, History* history, VNode* root, QNode* parent, Observation* observation, int depth)
+double POUCT::_simulate(std::shared_ptr<State> state, std::shared_ptr<History> history, std::shared_ptr<VNode> root, std::shared_ptr<QNode> parent, std::shared_ptr<Observation> observation, int depth)
 {
 	if (depth > _max_depth)
 	{
@@ -140,10 +140,10 @@ double POUCT::_simulate(State* state, History* history, VNode* root, QNode* pare
 		return rollout_reward;
 	}
 	int nsteps;
-	Action* action = _ucb(root);
-	tuple<State*, Observation*, double, int> generated = sample_generative_model(_agent, state, action);
-	State* next_state = get<0>(generated);
-	Observation* obs = get<1>(generated);
+	std::shared_ptr<Action> action = _ucb(root);
+	tuple<std::shared_ptr<State>, std::shared_ptr<Observation>, double, int> generated = sample_generative_model(_agent, state, action);
+	std::shared_ptr<State> next_state = get<0>(generated);
+	std::shared_ptr<Observation> obs = get<1>(generated);
 	double rd = get<2>(generated);
 	nsteps = get<3>(generated);
 	if (nsteps == 0)
@@ -157,51 +157,56 @@ double POUCT::_simulate(State* state, History* history, VNode* root, QNode* pare
 	//return 0;
 }
 
-VNode* POUCT::_VNode(Agent* agent, bool root)
+std::shared_ptr<VNode> POUCT::_VNode(std::shared_ptr<Agent> agent, bool root)
 {
 	if (root)
 	{
 
-		RootVNode* trvnode =  new RootVNode(_num_visits_init, agent->gethistory());
+		std::shared_ptr<RootVNode> trvnode(new RootVNode(_num_visits_init, agent->gethistory()));
 		return trvnode;
 	}
 	else
 	{
-		return new VNode(_num_visits_init);
+		std::shared_ptr<VNode> shared_vnode(new VNode(_num_visits_init));
+		return shared_vnode;
 	}
 }
-void POUCT::_expand_vnode(VNode* vnode, History* history, State* state)
+void POUCT::_expand_vnode(std::shared_ptr<VNode> vnode, std::shared_ptr<History> history, std::shared_ptr<State> state)
 {
-	 vector<Action*>* actlist = _agent->validActions(state, history);
+	 vector<std::shared_ptr<Action>>* actlist = _agent->validActions(state, history);
 	cout << "size vect " << int((*(actlist)).size()) << endl;
 	//cout << "Agent" << (*actlist.begin())->name << endl;
 	for (auto it : *actlist) {
 		if (!vnode->children.count(it))
 		{
 			cout << "act name"<<it->name << endl;
-			QNode* newqnode = new QNode(_num_visits_init, _value_init);
+
+			std::shared_ptr<QNode> shared_qnode(new QNode(_num_visits_init, _value_init));
+
+			// QNode* newqnode = new QNode(_num_visits_init, _value_init);
 			//vnode->children[(*action)] = new QNode(_num_visits_init, _value_init);
 			//vnode->children[action] = newqnode;
-			vnode->children[it] = newqnode;
+			// vnode->children[it] = newqnode;
+			vnode->children[it] = shared_qnode;
 		}
 
 	}
 	cout << "num child" << (vnode->children).size()<<endl;
 }
 
-double POUCT::_rollout(State* state, History* history, VNode* root, int depth)
+double POUCT::_rollout(std::shared_ptr<State> state, std::shared_ptr<History> history, std::shared_ptr<VNode> root, int depth)
 {
-	Action* action;
+	std::shared_ptr<Action> action;
 	float discount = 1.0;
 	float total_discounted_reward = 0;
-	State* next_state;
-	Observation* observation;
+	std::shared_ptr<State> next_state;
+	std::shared_ptr<Observation> observation;
 	float reward;
 
 	while (depth < _max_depth)
 	{
 		action = _rollout_policy->rollout(state, history);
-		tuple<State*, Observation*, double, int> generated = sample_generative_model(_agent, state, action);
+		tuple<std::shared_ptr<State>, std::shared_ptr<Observation>, double, int> generated = sample_generative_model(_agent, state, action);
 		next_state = get<0>(generated);
 		observation = get<1>(generated);
 		reward = get<2>(generated);
@@ -217,15 +222,15 @@ double POUCT::_rollout(State* state, History* history, VNode* root, int depth)
 	return total_discounted_reward;
 }
 
-Action* POUCT::_ucb(VNode* root)
+std::shared_ptr<Action> POUCT::_ucb(std::shared_ptr<VNode> root)
 {
-	Action* best_action;
+	std::shared_ptr<Action> best_action;
 	float best_value = -INFINITY;
 	double val;
-	std::map<Action*, QNode*> rtchld(root->children);
+	std::map<std::shared_ptr<Action>, std::shared_ptr<QNode>> rtchld(root->children);
 	for (auto const& i : root->children)
 	{
-		Action* act = i.first;
+		std::shared_ptr<Action> act = i.first;
 		if (root->children[act]->num_visits == 0)
 		{
 			val = INFINITY;

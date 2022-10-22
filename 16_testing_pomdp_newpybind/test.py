@@ -209,7 +209,10 @@ if __name__ == "__main__":
     print("checking state transition fn")
     #rew = env.state_transition(TigerAction("listen"),1.0)
     print("before transition",env.getstate())
-    rew = env.state_transition(a,1.0)
+    print("HEREE")
+    # BELOW LINE GIVES ERROR WHEN I RUN PYTHON test.py but when I run debugger error seems to be at line 230: agent = Agent(init_belief,P,T,O,R)
+    rew = env.state_transition(a, 1.0)
+    print("HEREE2")
     print("after transition",env.getstate())
     #print("reward", rew)
     #act.name_ = "p"
@@ -226,16 +229,17 @@ if __name__ == "__main__":
 
     agent = Agent(init_belief,P,T,O,R)
     newenv = Environment(st,T,R)
-    agent.update_hist(TigerAction("listen"),real_observation)
 
+    agent.update_hist(TigerAction("listen"),real_observation)
+    
     print("\n** Testing POUCT **")
     act = ActionPrior
     pouct = POUCT(3,1,4096,0.9,1.4,0,0,agent.getPolicyModel(),True,5)
-    #actplan = pouct.plan(agent)
-    '''agent.gethistory()
-    sim_obs = env.provide_observation(O,TigerAction("listen"))
-    print("sim obs",repr(sim_obs))
-    print("env test ",env.state_transition(act,1.0))'''
+    # actplan = pouct.plan(agent)
+    # agent.gethistory()
+    # sim_obs = env.provide_observation(O,TigerAction("listen"))
+    # print("sim obs",repr(sim_obs))
+    # print("env test ",env.state_transition(act,1.0))
     
 
 
