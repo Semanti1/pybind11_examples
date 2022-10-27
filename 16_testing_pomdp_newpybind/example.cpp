@@ -302,11 +302,15 @@ PYBIND11_MODULE(example, m)
         .def("sample", &PolicyModel::sample)
         .def("argmax", &PolicyModel::argmax)
         .def("get_all_actions", &PolicyModel::get_all_actions);
-    py::class_<RolloutPolicy, PyPolicyModel, std::shared_ptr<RolloutPolicy>> rollmodel(m, "RolloutPolicy");
-    rollmodel
+    // py::class_<RolloutPolicy, PyPolicyModel, std::shared_ptr<RolloutPolicy>> rollmodel(m, "RolloutPolicy");
+    // rollmodel
+    //     .def(py::init<>())
+    //     .def("rollout", &RolloutPolicy::rollout);
+    py::class_<RolloutPolicy>(m, "RolloutPolicy")
         .def(py::init<>())
         .def("rollout", &RolloutPolicy::rollout);
-    
+        
+
         
     /*py::class_<Environment>(m, "Environment")
         .def(py::init<State*, TransitionModel*, RewardModel* >())
@@ -349,9 +353,16 @@ PYBIND11_MODULE(example, m)
         .def("isNormalized", &Histogram::isNormalized)
         .def("update_hist_belief", &Histogram::update_hist_belief);
 
-    // py::class_<Agent, PyAgent, std::shared_ptr<Agent>> agent(m, "Agent");
-    // agent
-    py::class_<Agent>(m, "Agent")
+//  py::class_<Histogram, Belief>(m, "Histogram")
+//          .def(py::init<std::map<State*, float>>())
+//          .def("getHist", &Histogram::getHist)
+//          .def("lenHist", &Histogram::lenHist)
+//          .def("getitem", &Histogram::getitem)
+//          .def("isNormalized", &Histogram::isNormalized)
+//          .def("update_hist_belief", &Histogram::update_hist_belief);
+    py::class_<Agent, PyAgent, std::shared_ptr<Agent>> amodel(m, "Agent");
+    amodel
+    // py::class_<Agent>(m, "Agent")
         .def(py::init<std::shared_ptr<Belief>, std::shared_ptr<PolicyModel>, std::shared_ptr<TransitionModel>,
             std::shared_ptr<ObservationModel>, std::shared_ptr<RewardModel> >())
         .def("gethistory", &Agent::gethistory)

@@ -208,6 +208,7 @@ double Environment::state_transition(std::shared_ptr<Action> action, float disco
 	//State* sampledst = Tr->sample(st, action);
 	//State& st = state_;
 	//result = sample_explict_models(transitionmodel(), reward_model(), getstate(), action, discount_factor);
+	
 	cout << "B4 SAMPLE explicit" << endl;
 	result = sample_explict_models(Tr,Re, st, action, discount_factor);
 	cout << "After SAMPLE explicit" << endl;
@@ -276,7 +277,7 @@ tuple<std::shared_ptr<State>, double, int> sample_explict_models(std::shared_ptr
 	//std::shared_ptr<State> next_st = T->sample(state, a);
 	std::shared_ptr<State> next_st(T->sample(state, a));
 	cout << "next st sampled 1233333 " << typeid(next_st).name() << " st " << typeid(state).name()<< endl;
-	double reward = R->sample(state, a, next_st);
+	double reward = R->sample(state.get(), a.get(), next_st.get());
 	cout << "Reward " << reward << endl;
 	nsteps += 1;
 	tuple<std::shared_ptr<State>, double, int> res(next_st, reward, nsteps);

@@ -68,39 +68,40 @@ public:
 };
 
 
-/*class PyRolloutPolicy : public RolloutPolicy
-{
-public:
 
-    // inherit the constructors
-    using RolloutPolicy::RolloutPolicy;
+// class PyRolloutPolicy : public py::wrapper<RolloutPolicy>
+// {
+// public:
+     
+//     // inherit the constructors
+//     using py::wrapper<RolloutPolicy>::wrapper;
 
-    // trampoline (one for each virtual function)
-    /*set<tuple<Action*, int, float>> get_preferred_actions(State* state, History* history
-        ) override {
-        PYBIND11_OVERLOAD_PURE(
-            set<tuple<Action*, int, float>>, 
-            ActionPrior,      
-            get_preferred_actions,        
-            state,
-            history           
+//     // trampoline (one for each virtual function)
+//     set<tuple<std::shared_ptr<Action>, int, float>> get_preferred_actions(std::shared_ptr<State> state, std::shared_ptr<History> history
+//         ) override {
+//         PYBIND11_OVERLOAD(
+//             set<tuple<std::shared_ptr<Action>, int, float>>, 
+//             ActionPrior,      
+//             get_preferred_actions,        
+//             state,
+//             history           
 
-        );
-    }
+//         );
+//     }
 
-    Action* rollout(State* state, History* history
-    ) override {
-        PYBIND11_OVERLOAD(
-            Action*,
-            RolloutPolicy,
-            rollout,
-            state,
-            history
+//     std::shared_ptr<Action> rollout(std::shared_ptr<State> state, std::shared_ptr<History> history
+//     ) override {
+//         PYBIND11_OVERLOAD(
+//             std::shared_ptr<Action>,
+//             RolloutPolicy,
+//             rollout,
+//             state,
+//             history
 
-        );
-    }
+//         );
+//     }
 
-};*/
+// };
 class POUCT : public Planner {
 public:
 
