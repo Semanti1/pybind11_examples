@@ -1,8 +1,7 @@
 from example import *
 import example
 
-
-#from examples import *
+# running test
 
 class Cat(Animal):
     def __init__(self,name):

@@ -5,8 +5,11 @@ using std::string;
 #include <iostream>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/embed.h>
+#include <pybind11/stl_bind.h>
 #include <list>
 #include "pouct.h"
+//PYBIND11_MAKE_OPAQUE(std::map<std::shared_ptr<State>, float>);
 //#include "basics.h"
 //#include "planner.h"
 //
@@ -240,10 +243,14 @@ PYBIND11_MODULE(example, m)
         .def("getname", &State::getname)
         .def_readwrite("name", &State::name);
 
-    py::class_<Belief>(m, "Belief")
-        //.def(py::init<>())
+    py::class_<Belief, PyBelief, std::shared_ptr<Belief>> belief_model(m, "Belief");
+    belief_model
+        .def(py::init<>())
         .def("random", &Belief::random);
-
+    
+        /*py::class_<Belief>(m, "Belief")
+        .def("random", &Belief::random);*/
+        //.def(py::init<>());
    
     
     py::class_<Action, PyAction, std::shared_ptr<Action>> action(m, "Action", py::dynamic_attr());
@@ -256,15 +263,27 @@ PYBIND11_MODULE(example, m)
         .def(py::init<>())
         .def_readwrite("name", &Action::name);*/
 
-    py::class_<Observation>(m, "Observation")
-        .def(py::init<>());
-    py::class_<Planner>(m, "Planner")
+    py::class_<Observation,PyObservation, std::shared_ptr<Observation>>(m, "Observation")
+        .def(py::init<string>());
+    // py::class_<Planner, PyPlanner, std::shared_ptr<Planner>> planner(m, "Planner");
+    // planner
+    py::class_<History, PyHistory, std::shared_ptr<History>> history(m, "History", py::dynamic_attr());
+    history
+        
+        .def(py::init<>())
+        .def_readwrite("history", &History::history);
+    py::class_<Planner, PyPlanner, std::shared_ptr<Planner>> pln(m, "Planner");
+    pln
         //.def(py::init<>())
         .def("plan", &Planner::plan);
+
+   
+
     /*py::class_<VNode>(m, "VNode")
         .def(py::init<int>())
         .def("getnumvis", &VNode::getnumvis);*/
-    py::class_<ObservationModel, PyObservationModel>(m, "ObservationModel")
+    py::class_<ObservationModel, PyObservationModel, std::shared_ptr<ObservationModel>> omodel(m, "ObservationModel");
+    omodel
         .def(py::init<>())
         .def("probability", &ObservationModel::probability)
         .def("sample", &ObservationModel::sample)
@@ -289,16 +308,28 @@ PYBIND11_MODULE(example, m)
         .def("sample", &RewardModel::sample);
         //.def("argmax", &RewardModel::argmax);
 
-    py::class_<PolicyModel, PyPolicyModel>(m, "PolicyModel")
-        .def(py::init<>())
+    py::class_<PolicyModel, PyPolicyModel, std::shared_ptr<PolicyModel>> pmodel(m, "PolicyModel");
+    pmodel
+        .def(py::init_alias<>())
         .def("probability", &PolicyModel::probability)
         .def("sample", &PolicyModel::sample)
         .def("argmax", &PolicyModel::argmax)
         .def("get_all_actions", &PolicyModel::get_all_actions);
-    py::class_<RolloutPolicy, PolicyModel>(m, "RolloutPolicy")
+
+     //py::class_<RolloutPolicy, PyRolloutPolicy, std::shared_ptr<RolloutPolicy>> rollmodel(m, "RolloutPolicy", pmodel);
+     py::class_<RolloutPolicy, PyRolloutPolicy, std::shared_ptr<RolloutPolicy>> rollmodel(m, "RolloutPolicy", pmodel);
+     rollmodel
+         .def(py::init_alias<>())
+         .def("probability", &RolloutPolicy::probability)
+         .def("sample", &RolloutPolicy::sample)
+         .def("argmax", &RolloutPolicy::argmax)
+         .def("get_all_actions", &RolloutPolicy::get_all_actions)
+         .def("rollout", &RolloutPolicy::rollout);
+   /* py::class_<RolloutPolicy>(m, "RolloutPolicy")
         .def(py::init<>())
-        .def("rollout", &RolloutPolicy::rollout);
-    
+        .def("rollout", &RolloutPolicy::rollout);*/
+        
+
         
     /*py::class_<Environment>(m, "Environment")
         .def(py::init<State*, TransitionModel*, RewardModel* >())
@@ -312,7 +343,8 @@ PYBIND11_MODULE(example, m)
         .def("execute", &Environment::execute)
         .def("provide_observation", &Environment::provide_observation);*/
 
-    py::class_<Environment, std::shared_ptr<Environment>>(m, "Environment")
+    py::class_<Environment, PyEnvironment, std::shared_ptr<Environment>> environment(m, "Environment");
+    environment
     
         .def(py::init<std::shared_ptr<State>, std::shared_ptr<TransitionModel>, std::shared_ptr<RewardModel> >())
         //.def(py::init<State&>())
@@ -325,8 +357,11 @@ PYBIND11_MODULE(example, m)
         .def("execute", &Environment::execute)
         .def("provide_observation", &Environment::provide_observation);
 
-    py::class_<Histogram, Belief>(m, "Histogram")
-        .def(py::init<std::map<State*, float>>())
+    // py::class_<Histogram, Belief>(m, "Histogram")
+    py::class_<Histogram, PyHistogram, std::shared_ptr<Histogram>> histogram(m, "Histogram", belief_model);
+    histogram
+
+        .def(py::init<std::map<std::shared_ptr<State>, float>>())
         .def("getHist", &Histogram::getHist)
         .def("lenHist", &Histogram::lenHist)
         .def("getitem", &Histogram::getitem)
@@ -337,29 +372,45 @@ PYBIND11_MODULE(example, m)
         .def("isNormalized", &Histogram::isNormalized)
         .def("update_hist_belief", &Histogram::update_hist_belief);
 
-    py::class_<Agent>(m, "Agent")
-        .def(py::init<Belief*, PolicyModel*, TransitionModel*,
-            ObservationModel*, RewardModel* >())
+//  py::class_<Histogram, Belief>(m, "Histogram")
+//          .def(py::init<std::map<State*, float>>())
+//          .def("getHist", &Histogram::getHist)
+//          .def("lenHist", &Histogram::lenHist)
+//          .def("getitem", &Histogram::getitem)
+//          .def("isNormalized", &Histogram::isNormalized)
+//          .def("update_hist_belief", &Histogram::update_hist_belief);
+    py::class_<Agent, PyAgent, std::shared_ptr<Agent>> amodel(m, "Agent");
+    amodel
+        
+        .def(py::init_alias<std::shared_ptr<Belief>, std::shared_ptr<PolicyModel>, std::shared_ptr<TransitionModel>,
+            std::shared_ptr<ObservationModel>, std::shared_ptr<RewardModel> >())
+        //.def(py::init<std::shared_ptr<Belief>, std::shared_ptr<TransitionModel>, std::shared_ptr<ObservationModel>,
+         //   std::shared_ptr<RewardModel> >())
         .def("gethistory", &Agent::gethistory)
         .def("update_hist", &Agent::update_hist)
         .def("init_belief", &Agent::init_belief)
+        .def("belief", &Agent::belief)
         .def("cur_belief", &Agent::cur_belief)
-        .def("setbelief", &Agent::setbelief)
+        .def("setbelief", &Agent::setbelief)        
         .def("sample_belief", &Agent::sample_belief)
         .def("getObsModel", &Agent::getObsModel)
         .def("getTransModel", &Agent::getTransModel)
         .def("getRewardModel", &Agent::getRewardModel)
         .def("getPolicyModel", &Agent::getPolicyModel)
-        .def("validActions", &Agent::validActions)
+        
+        .def("validActions", &Agent::validActions);
         //.def("update", &Agent::update)
-        .def("getRewardModel", &Agent::getRewardModel);
+       // .def("getRewardModel", &Agent::getRewardModel);
 
     py::class_<ActionPrior>(m, "ActionPrior")
         //.def(py::init<>())
         .def("get_preferred_actions", &ActionPrior::get_preferred_actions);
 
-    py::class_<POUCT, Planner>(m, "POUCT")
-        .def(py::init<int, float, int, float, float, int, float, RolloutPolicy*, bool, int>())
+    py::class_<POUCT, PyPOUCT, std::shared_ptr<POUCT> >(m, "POUCT", pln)
+        .def(py::init<int, float, int, float, float, int, float, std::shared_ptr<RolloutPolicy>, bool, int, Agent>())
+        .def("getAgent", &POUCT::getAgent)
+        .def("setAgent", &POUCT::setAgent)
+        .def("update", &POUCT::update)
         .def("plan", &POUCT::plan);
         /*.def("lenHist", &Histogram::lenHist)
         .def("getitem", &Histogram::getitem)
@@ -370,7 +421,7 @@ PYBIND11_MODULE(example, m)
         .def("isNormalized", &Histogram::isNormalized)
         .def("update_hist_belief", &Histogram::update_hist_belief);*/
     
-    //m.def("sample_generative_model", &sample_generative_model, py::arg("agent"), py::arg("state"),py::arg("action"),py::arg("discount_factor")=1);
+    m.def("sample_generative_model", &sample_generative_model, py::arg("agent"), py::arg("state"),py::arg("action"),py::arg("discount_factor")=1);
     //m.def("sample_explict_models1", &sample_explict_models1, py::arg("T"), py::arg("O"), py::arg("R"), py::arg("state"), py::arg("a"),py::arg("discount_factor")=1);
     m.def("sample_explict_models", &sample_explict_models, py::arg("T"), py::arg("R"), py::arg("state"), py::arg("a"), py::arg("discount_factor")=1);
     /*py::class_<RandomRollout>(m, "RandomRollout")

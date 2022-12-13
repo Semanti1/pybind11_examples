@@ -13,25 +13,28 @@ using std::string;
 //#include "pouct.h"
 class Planner {
 public:
-	virtual Action* plan(Agent* agent) = 0;
+	//virtual std::shared_ptr<Action> plan(std::shared_ptr<Agent> agent) = 0;
+    virtual std::shared_ptr<Action> plan() = 0;
+    virtual ~Planner() {}
 	//virtual void update(Agent agent, Action real_action, Observation real_observation) = 0;
 };
 
-class PyPlanner : public Planner
+class PyPlanner : public py::wrapper<Planner>
 {
 public:
 
     // inherit the constructors
-    using Planner::Planner;
+    using py::wrapper<Planner>::wrapper;
 
     // trampoline (one for each virtual function)
-    Action* plan(Agent* agent
+   // std::shared_ptr<Action> plan(std::shared_ptr<Agent> agent
+        std::shared_ptr<Action> plan(
         ) override {
         PYBIND11_OVERLOAD_PURE(
-            Action*, /* Return type */
+            std::shared_ptr<Action>, /* Return type */
             Planner,      /* Parent class */
-            plan,        /* Name of function in C++ (must match Python name) */
-            agent      /* Argument(s) */
+            plan       /* Name of function in C++ (must match Python name) */
+                  /* Argument(s) */
             
         );
     }
