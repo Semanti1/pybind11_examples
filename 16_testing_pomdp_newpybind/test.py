@@ -202,7 +202,7 @@ if __name__ == "__main__":
     print(init_belief.getitem(st1))
     
     #act = ActionPrior
-    pouct = POUCT(3,1,4096,0.9,1.4,0,0,P,True,5,agent)
+    pouct = POUCT(3,1,2000,0.9,1.4,0,0,P,True,5,agent)
     #print(init_belief.getitem(TigerState("tiger-left")))
 
     #h = agent.gethistory()
@@ -215,13 +215,13 @@ if __name__ == "__main__":
     # print("sim obs",repr(sim_obs))
     # print("env test ",env.state_transition(act,1.0))
 
-    for i in range(1):
+    for i in range(10):
         action = pouct.plan()
         
         print("==== Step %d ====" % (i+1))
         #print("True state:", newenv.state)
         #print("Belief:", agent.cur_belief)
-        print("Action:", action)
+        print("Action:", action.name)
         # There is no state transition for the tiger domain.
         # In general, the ennvironment state can be transitioned
         # using
@@ -264,10 +264,10 @@ if __name__ == "__main__":
         agent.setbelief(new_belief, True)
         print("after bel ")
         print(new_belief.getitem(st1), new_belief.getitem(st2))
-        print("agent bel ")
+        #print("agent bel ")
         pouct.setAgent(agent)
         #pouct = POUCT(3,1,10,0.9,1.4,0,0,P,True,5,agent)
-        print(agent.belief().getitem(st1), pouct.getAgent().cur_belief().getitem(st1) )
+        #print(agent.belief().getitem(st1), pouct.getAgent().cur_belief().getitem(st1) )
         #print(agent.belief().getitem(st1), agent.belief().getitem(st2))
         #print("T left", pouct.getAgent().cur_belief().getitem(TigerState("tiger-left")), "T right", pouct.getAgent().cur_belief().getitem(TigerState("tiger-right")))
         if action.name.startswith("open"):

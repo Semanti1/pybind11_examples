@@ -26,10 +26,11 @@ RootVNode::RootVNode(int nvisit, History hist) :VNode(nvisit)
 std::shared_ptr<Action> VNode::argmax()
 {
 	std::shared_ptr<Action> action;
-	std::shared_ptr<Action> best_action;
+	//std::shared_ptr<Action> best_action;
 	float best_val =  -INFINITY;
 	//best_action = nullptr;
 	bool it = children.empty();
+	string ba;
 	//cout << "HELLOO1" << " size " << children.size() << endl;
 	for (auto const& x : children)
 	{
@@ -37,11 +38,12 @@ std::shared_ptr<Action> VNode::argmax()
 		if (x.second->value > best_val)
 		{
 			//cout << "HELLOO3" << endl;
-			best_action = x.first;
+			ba = x.first;
 			best_val = x.second->value;
 			//cout << "" << endl;
 		}
 	}
+	auto best_action = std::make_shared<Action>(ba);
 	return best_action;
 }
 
@@ -101,7 +103,8 @@ tuple<std::shared_ptr<Action>, double, int> POUCT::_search()
 	}
 	//cout << "OUT OF WHILE LOOP" << endl;
 	//cout << dynamic_cast<RootVNode*>(tree)->num_visits << endl;
-	std::unordered_map<std::shared_ptr<Action>, std::shared_ptr<QNode>> a = tree->children;
+	//std::unordered_map<std::shared_ptr<Action>, std::shared_ptr<QNode>> a = tree->children;
+	std::unordered_map<string, std::shared_ptr<QNode>> a = tree->children;
 	//cout << "Tree empty" << ((*tree).children) << endl;
 	best_action = tree->argmax();
 	tuple<std::shared_ptr<Action>, double, int> result(best_action, time_taken, sims_count);
@@ -144,7 +147,7 @@ double POUCT::_simulate(std::shared_ptr<State> state, History history, std::shar
 			//parent->children.insert(std::pair<std::shared_ptr<Observation>, std::shared_ptr<VNode>>(std::move(observation), root));
 			//if (!parent->children.count(observation))
 			{
-				auto it = parent->children.find(std::move(observation));
+				auto it = parent->children.find(std::move(observation->name));
 					if (it != parent->children.end())
 						it->second = root;
 				
@@ -166,10 +169,10 @@ double POUCT::_simulate(std::shared_ptr<State> state, History history, std::shar
 	if (nsteps == 0)
 		return rd;
 	history.add(action, obs);
-	double total_reward = rd + pow(_discount_factor,nsteps) * _simulate(next_state, history, root->children[action]->children[obs], root->children[action], obs, depth + nsteps);
+	double total_reward = rd + pow(_discount_factor,nsteps) * _simulate(next_state, history, root->children[action->name]->children[obs->name], root->children[action->name], obs, depth + nsteps);
 	root->num_visits += 1;
-	root->children[action]->num_visits += 1;
-	root->children[action]->value = root->children[action]->value + (total_reward - (root->children[action]->value)) / (root->children[action]->num_visits);
+	root->children[action->name]->num_visits += 1;
+	root->children[action->name]->value = root->children[action->name]->value + (total_reward - (root->children[action->name]->value)) / (root->children[action->name]->num_visits);
 	return total_reward;
 	//return 0;
 }
@@ -208,7 +211,7 @@ void POUCT::_expand_vnode(std::shared_ptr<VNode> vnode, History history, std::sh
 	{
 		//cout << "name act " << ptr->name << endl;
 		ct = ct + 1;
-		if (!vnode->children.count(ptr))
+		if (!vnode->children.count(ptr->name))
 			//if ((*iter)->bar() == true)
 			//actlist(ptr);
 			//actlist.push_back(std::move(ptr));
@@ -220,7 +223,7 @@ void POUCT::_expand_vnode(std::shared_ptr<VNode> vnode, History history, std::sh
 			
 			//vnode->children.insert(std::pair<std::shared_ptr<Action>, std::shared_ptr<QNode>>(std::move(ptr), std::make_shared<QNode>(_num_visits_init, _value_init)));
 			//vnode->children[*&ptr] = std::make_shared<QNode>(_num_visits_init, _value_init);
-			 vnode->children[ptr] = std::move(std::make_shared<QNode>(_num_visits_init, _value_init));
+			 vnode->children[ptr->name] = std::move(std::make_shared<QNode>(_num_visits_init, _value_init));
 			//cout << "hello " <<  endl;
 			//cout << "count " << vnode->children.count(ptr) << endl;
 		//	vnode->children[std::move(ptr)] = std::move(std::make_shared<QNode>(_num_visits_init, _value_init));
@@ -295,17 +298,21 @@ std::shared_ptr<Action> POUCT::_ucb(std::shared_ptr<VNode> root)
 	std::shared_ptr<Action> best_action;
 	float best_value = -1000000000;
 	double val;
-	std::unordered_map<std::shared_ptr<Action>, std::shared_ptr<QNode>> rtchld(root->children);
+	//std::unordered_map<std::shared_ptr<Action>, std::shared_ptr<QNode>> rtchld(root->children);
+	std::unordered_map<string, std::shared_ptr<QNode>> rtchld(root->children);
 	for (const auto& i : root->children)
 	{
-		std::shared_ptr<Action> act = i.first;
-		if (root->children[act]->num_visits == 0)
+		//std::shared_ptr<Action> act = i.first;
+		//std::shared_ptr<Action> act;
+		//act->name = i.first;
+		auto act = std::make_shared<Action>(i.first);
+		if (root->children[act->name]->num_visits == 0)
 		{
 			val = 1000000000;
 		}
 		else
 		{
-			val = (root->children[act]->value) + _exploration_const * sqrt(log(root->num_visits + 1) / root->children[act]->num_visits);
+			val = (root->children[act->name]->value) + _exploration_const * sqrt(log(root->num_visits + 1) / root->children[act->name]->num_visits);
 		}
 		if (val > best_value)
 		{
@@ -333,23 +340,23 @@ void POUCT::update(std::shared_ptr<Action> real_action, std::shared_ptr<Observat
 		int ct = 0;
 		for (const auto& elem : tree->children)
 		{
-			std::cout << "first " << elem.first->name << " " << "\n";
-			std::cout << "real act " << real_action->name << " " << (elem.first==real_action) << "\n";
-			cout << "first clause " << (tree->children.find(real_action) == tree->children.end()) << endl;
-			cout << "real obs " << real_observation->name << endl;
+			//std::cout << "first " << elem.first << " " << "\n";
+			//std::cout << "real act " << real_action->name << " " << (elem.first==real_action->name) << "\n";
+			//cout << "first clause " << (tree->children.find(real_action->name) == tree->children.end()) << endl;
+			//cout << "real obs " << real_observation->name << endl;
 			//cout << "clause 2 " << (elem.second->children) << endl;
-			cout << "entering nested" << endl;
+			//cout << "entering nested" << endl;
 			
-			for (auto it = (elem.second->children).begin(); it != (elem.second->children).end(); it++) {
+			/*for (auto it = (elem.second->children).begin(); it != (elem.second->children).end(); it++) {
 				//cout << it->first->name << endl;
 				
-			}
-			cout << "out of nested nested " << endl;
-			for (const auto& elem2 : elem.second->children)
+			}*/
+			//cout << "out of nested nested " << endl;
+			/*for (const auto& elem2 : elem.second->children)
 			{
 				ct = ct + 1;
 				//std::cout << "second " << elem2.first->name << " " << "\n";
-			}
+			}*/
 
 		}
 		/*if ((tree->children.find(real_action) == tree->children.end()) || tree->children[real_action]->children.find(real_observation) == tree->children[real_action]->children.end())
@@ -364,11 +371,11 @@ void POUCT::update(std::shared_ptr<Action> real_action, std::shared_ptr<Observat
 			//ct = ct + 1;
 			//std::cout << "second " << elem.first->name << " " << "\n";
 		}
-		cout << "out of nested nested ct" << ct << endl;
-		if (test[real_action]->children[real_observation])
+		//cout << "out of nested nested ct" << ct << endl;
+		if (test[real_action->name]->children[real_observation->name])
 		{
 			tree = RootVNode::from_vnode(
-				tree->children[real_action]->children[real_observation],
+				tree->children[real_action->name]->children[real_observation->name],
 				_agent.gethistory());
 
 			cout << "pruned " << endl;

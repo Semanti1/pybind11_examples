@@ -12,7 +12,8 @@ using namespace std;
 //PYBIND11_MAKE_OPAQUE(std::map<std::shared_ptr<State>, float>);
 class QNode {
 public:
-    std::unordered_map<std::shared_ptr<Observation>, std::shared_ptr<VNode>> children;
+    //std::unordered_map<std::shared_ptr<Observation>, std::shared_ptr<VNode>> children;
+    std::unordered_map<string, std::shared_ptr<VNode>> children;
     int num_visits;
     float value;
     QNode(int nvisit, float val) :num_visits(nvisit), value(val) {}
@@ -30,7 +31,8 @@ class VNode {
 public:
     
     VNode(int nvisit) :num_visits(nvisit) {}
-    std::unordered_map<std::shared_ptr<Action>, std::shared_ptr<QNode>> children;
+    //std::unordered_map<std::shared_ptr<Action>, std::shared_ptr<QNode>> children;
+    std::unordered_map<string, std::shared_ptr<QNode>> children;
     int num_visits;
     float value;
     std::shared_ptr<Action> argmax();
