@@ -81,12 +81,15 @@ tuple<std::shared_ptr<Action>, double, int> POUCT::_search()
 	double time_taken = 0;
 	bool stop_by_sims = _num_sims > 0 ? true : false;
 	start_time = std::chrono::system_clock::now();
+	History hist = _agent->gethistory();
+	cout << "history before " << hist.history.size() << endl;
+	//int historyDepth = hist.history.size();
 	while (true)
 	{
 		//cout << "INSIDE WHILE";
-		state = _agent.sample_belief();
+		state = _agent->sample_belief();
 		//cout << state << "STATE" << endl;
-		_simulate(state, _agent.gethistory(), tree, NULL, NULL, 0);
+		_simulate(state, _agent->gethistory(), tree, NULL, NULL, 0);
 		sims_count += 1;
 		std::chrono::duration<double> duration = std::chrono::system_clock::now() - start_time;
 		time_taken = duration.count();
@@ -100,7 +103,9 @@ tuple<std::shared_ptr<Action>, double, int> POUCT::_search()
 			if (time_taken > _planning_time)
 				break;
 		}
+		//hist.history.resize(historyDepth);
 	}
+	cout << "history after " << hist.history.size() << endl;
 	//cout << "OUT OF WHILE LOOP" << endl;
 	//cout << dynamic_cast<RootVNode*>(tree)->num_visits << endl;
 	//std::unordered_map<std::shared_ptr<Action>, std::shared_ptr<QNode>> a = tree->children;
@@ -120,6 +125,7 @@ double POUCT::_simulate(std::shared_ptr<State> state, History history, std::shar
 	{
 		return 0;
 	}
+	//cout << "history in simulate " << history.history.size() << endl;
 	//cout << "HELLO0"<< endl;
 	if (root == nullptr)
 	{
@@ -184,7 +190,7 @@ std::shared_ptr<VNode> POUCT::_VNode(bool root)
 	{
 
 		//std::shared_ptr<RootVNode> trvnode(new RootVNode(_num_visits_init, _agent.gethistory()));
-		return std::move(std::make_shared<RootVNode>(_num_visits_init, _agent.gethistory()));
+		return std::move(std::make_shared<RootVNode>(_num_visits_init, _agent->gethistory()));
 		//return trvnode;
 	}
 	else
@@ -199,14 +205,14 @@ void POUCT::_expand_vnode(std::shared_ptr<VNode> vnode, History history, std::sh
 	
 	
 	//vector<std::shared_ptr<Action>>* actlist = (_agent->validActions(state, history));
-	auto actlist = _agent.getTransModel();
+	auto actlist = _agent->getTransModel();
 	//cout << "hello13254654" << endl;
 	int ct = 0;
 	//cout << "hello there" << endl;
 	//cout <<  _agent.validActions(state, history).empty() << endl;//((_agent->validActions(state, history)).empty()) << endl;
 	//cout << "after hello there " << endl;
 	
-	for (auto const& ptr : (_agent.validActions(state, history)))
+	for (auto const& ptr : (_agent->validActions(state, history)))
 		//for (vector<std::shared_ptr<Action>>::iterator ptr = actlist.begin(), itr_end = actlist.end(); ptr != itr_end; ++ptr)
 	{
 		//cout << "name act " << ptr->name << endl;
@@ -376,7 +382,7 @@ void POUCT::update(std::shared_ptr<Action> real_action, std::shared_ptr<Observat
 		{
 			tree = RootVNode::from_vnode(
 				tree->children[real_action->name]->children[real_observation->name],
-				_agent.gethistory());
+				_agent->gethistory());
 
 			cout << "pruned " << endl;
 		}

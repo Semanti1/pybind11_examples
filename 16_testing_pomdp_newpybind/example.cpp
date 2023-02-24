@@ -407,7 +407,7 @@ PYBIND11_MODULE(example, m)
         .def("get_preferred_actions", &ActionPrior::get_preferred_actions);
 
     py::class_<POUCT, PyPOUCT, std::shared_ptr<POUCT> >(m, "POUCT", pln)
-        .def(py::init<int, float, int, float, float, int, float, std::shared_ptr<RolloutPolicy>, bool, int, Agent>())
+        .def(py::init<int, float, int, float, float, int, float, std::shared_ptr<RolloutPolicy>, bool, int, std::shared_ptr<Agent>>())
         .def("getAgent", &POUCT::getAgent)
         .def("setAgent", &POUCT::setAgent)
         .def("update", &POUCT::update)

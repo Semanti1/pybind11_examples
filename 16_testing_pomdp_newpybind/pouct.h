@@ -134,14 +134,14 @@ public:
     float _exploration_const;
     std::shared_ptr<ActionPrior> _action_prior;
     std::shared_ptr<RolloutPolicy> _rollout_policy;
-    //std::shared_ptr<Agent> _agent;
-    Agent _agent;
+    std::shared_ptr<Agent> _agent;
+    //Agent _agent;
     int _last_num_sims;
     float _last_planning_time;
     std::shared_ptr<VNode> tree;
     bool _show_progress;
     int _pbar_update_interval;
-    POUCT(int max_depth, float plan_time, int num_sims, float discount_factor, float exp_const, int num_visits_init, float val_init, std::shared_ptr<RolloutPolicy> rollout_pol,bool show_prog, int pbar_upd_int, Agent ag) :  _max_depth(max_depth), _planning_time(plan_time), _num_sims(num_sims), _discount_factor(discount_factor), _exploration_const(exp_const), _num_visits_init(num_visits_init), _rollout_policy(rollout_pol), _show_progress(show_prog), _pbar_update_interval(pbar_upd_int), _agent(ag)
+    POUCT(int max_depth, float plan_time, int num_sims, float discount_factor, float exp_const, int num_visits_init, float val_init, std::shared_ptr<RolloutPolicy> rollout_pol,bool show_prog, int pbar_upd_int, std::shared_ptr<Agent> ag) :  _max_depth(max_depth), _planning_time(plan_time), _num_sims(num_sims), _discount_factor(discount_factor), _exploration_const(exp_const), _num_visits_init(num_visits_init), _rollout_policy(rollout_pol), _show_progress(show_prog), _pbar_update_interval(pbar_upd_int), _agent(ag)
     {
         tree = nullptr;
     }
@@ -149,8 +149,9 @@ public:
 
     //std::shared_ptr<Action> plan(std::shared_ptr<Agent> agent) ;
     std::shared_ptr<Action> plan();
-    Agent& getAgent() { return _agent; };
-    void setAgent(Agent a) { _agent = a; }
+    //Agent& getAgent() { return _agent; };
+    std::shared_ptr <Agent> getAgent() { return _agent; }
+    void setAgent(shared_ptr < Agent> a) { _agent = a; }
     tuple<shared_ptr<Action>, double, int> _search();
     double _simulate(std::shared_ptr<State> state, History history, std::shared_ptr<VNode> root, std::shared_ptr<QNode> parent, std::shared_ptr<Observation> observation, int depth);
     //void clear_agent();

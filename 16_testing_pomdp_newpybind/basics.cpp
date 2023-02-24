@@ -119,7 +119,7 @@ std::shared_ptr<Histogram> Histogram::update_hist_belief(std::shared_ptr<Action>
 	return sharedHist;
 }*/
 
-History Agent::gethistory()
+History Agent::gethistory() 
 {
 	//cout << hist->history << endl;
 	return hist;
@@ -135,7 +135,7 @@ History Agent::gethistory()
 }*/
 void Agent::update_hist(std::shared_ptr<Action> act, std::shared_ptr<Observation> obs)
 {
-	//cout << "action " << act.get()->name << " obs " << obs;
+	cout << "action " << act.get()->name << " obs " << obs;
 	//Action* a = act.get();
 	//hist->history.push_back(act);
 	hist.add(act,obs);
@@ -287,13 +287,13 @@ std::shared_ptr<Observation> Environment::provide_observation(std::shared_ptr<Ob
 	//return Omodel->sample(getstate(), act);
 }
 
-//tuple<std::shared_ptr<State>, std::shared_ptr<Observation>, double, int> sample_generative_model(std::shared_ptr<Agent> agent, std::shared_ptr<State> state, std::shared_ptr<Action> action, float discount_factor)
+tuple<std::shared_ptr<State>, std::shared_ptr<Observation>, double, int> sample_generative_model(std::shared_ptr<Agent> agent, std::shared_ptr<State> state, std::shared_ptr<Action> action, float discount_factor)
 
-tuple<std::shared_ptr<State>, std::shared_ptr<Observation>, double, int> sample_generative_model(Agent agent, std::shared_ptr<State> state, std::shared_ptr<Action> action, float discount_factor)
+//tuple<std::shared_ptr<State>, std::shared_ptr<Observation>, double, int> sample_generative_model(Agent agent, std::shared_ptr<State> state, std::shared_ptr<Action> action, float discount_factor)
 {
 
 	tuple<std::shared_ptr<State>, std::shared_ptr<Observation>, double, int> result;
-	result = sample_explict_models1(agent.getTransModel(), agent.getObsModel(), agent.getRewardModel(), state, action, discount_factor);
+	result = sample_explict_models1(agent->getTransModel(), agent->getObsModel(), agent->getRewardModel(), state, action, discount_factor);
 	return result;
 }
 

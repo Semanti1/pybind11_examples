@@ -216,6 +216,7 @@ if __name__ == "__main__":
     # print("env test ",env.state_transition(act,1.0))
 
     for i in range(10):
+
         action = pouct.plan()
         
         print("==== Step %d ====" % (i+1))
@@ -249,11 +250,11 @@ if __name__ == "__main__":
         real_observation = TigerObservation(newenv.getstate().name)
         print(">> Observation:",  real_observation)
         pouct.getAgent().update_hist(action, real_observation)
-
+        #print(len(pouct.getAgent().gethistory().history))
         # Update the belief. If the planner is POMCP, planner.update
         # also automatically updates agent belief.
         pouct.update(action, real_observation)
-        
+        #print(len(pouct.getAgent().gethistory().history))
         new_belief = pouct.getAgent().cur_belief().update_hist_belief(
                 
                 action, real_observation,

@@ -193,7 +193,7 @@ public:
         hist = new History();
     }*/
     //std::shared_ptr<History> gethistory();
-    History gethistory();
+    History gethistory() ;
     void update_hist(std::shared_ptr<Action> act, std::shared_ptr<Observation> obs);
     std::shared_ptr<Belief> init_belief();
     std::shared_ptr<Belief> belief();
@@ -613,8 +613,8 @@ class PyHistogram : public py::wrapper<Histogram> {
       using py::wrapper<Observation>::wrapper;
  };
 
-//tuple<std::shared_ptr<State>, std::shared_ptr<Observation>, double, int> sample_generative_model(std::shared_ptr<Agent> agent, std::shared_ptr<State> state, std::shared_ptr<Action> action, float discount_factor=1);
-tuple<std::shared_ptr<State>, std::shared_ptr<Observation>, double, int> sample_generative_model(Agent agent, std::shared_ptr<State> state, std::shared_ptr<Action> action, float discount_factor = 1);
+tuple<std::shared_ptr<State>, std::shared_ptr<Observation>, double, int> sample_generative_model(std::shared_ptr<Agent> agent, std::shared_ptr<State> state, std::shared_ptr<Action> action, float discount_factor=1);
+//tuple<std::shared_ptr<State>, std::shared_ptr<Observation>, double, int> sample_generative_model(Agent agent, std::shared_ptr<State> state, std::shared_ptr<Action> action, float discount_factor = 1);
 tuple<std::shared_ptr<State>, std::shared_ptr<Observation>, double, int> sample_explict_models1(std::shared_ptr<TransitionModel> T, std::shared_ptr<ObservationModel> O, std::shared_ptr<RewardModel> R, std::shared_ptr<State> state, std::shared_ptr<Action> a, float discount_factor);
 //tuple<State*, Observation*, double, int> sample_explict_models1(TransitionModel* T, ObservationModel* O, RewardModel* R, State* state, Action* a, float discount_factor=1);
 tuple<std::shared_ptr<State>, double, int> sample_explict_models(std::shared_ptr<TransitionModel> T, std::shared_ptr<RewardModel> R, std::shared_ptr<State> state, std::shared_ptr<Action> a, float discount_factor);
