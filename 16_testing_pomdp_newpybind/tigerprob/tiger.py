@@ -1,21 +1,8 @@
-#from example import *
-#import example
+from example import *
+import example
 
-#import random
-import sys
-#sys.path.insert(1, "C:/Users/renia/Downloads/pybind11_examples/16_testing_pomdp_newpybind/tigerprob/")
+import random
 
-from tigerprob.tiger import *
-#from objectsearch.oopomdp import *
-from objectsearch.problem import *
-#print(example.talk(example.Dog(),2))
-#print(example.talk(example.Cat(),3))
-
-'''class Deer(Animal):
-    def talk(self, n_times):
-        //return "bark! " * n_times'''
-
-'''
 class TigerState(State):
     def __init__(self, name):
         State.__init__(self,name)
@@ -71,7 +58,7 @@ class TObservationModel(ObservationModel):
         ObservationModel.__init__(self)
         self.noise = noise
 
-    def probability(self, observation, next_state, action):
+    def probability(self, observation, next_state, action, next_robot_state):
         if action.name == "listen":
             # heard the correct growl
             if observation.name == next_state.name:
@@ -182,112 +169,3 @@ class PPolicyModel(RolloutPolicy):
         return a
         #return PPolicyModel.ACTIONS
         #return list(ACTIONS)
-
-'''
-
-if __name__ == "__main__":
-
-    
-
-    
-    print("\n** Testing obj search **")
-    unittest()
-    print("\n** Testing POUCT **")
-    st1 = TigerState("tiger-left")
-    st2 = TigerState("tiger-right")
-    print ("st1", st1)
-    init_belief = Histogram({st1: 0.5, st2: 0.5})
-    P = PPolicyModel()
-    O = TObservationModel(0.15)
-    T = TTransitionModel()
-    R = TRewardModel()
-    #agent = Agent(init_belief,P,T,O,R)
-    newenv = Environment(st2,T,R)
-    print("len bel ", init_belief.lenHist())
-    print("init bel ", init_belief.getitem(st1))
-    agent = Agent(init_belief,P,T,O,R)
-    print("agents belief" , agent.belief().getitem(st1))
-    #agent.update_hist(TigerAction("listen"),real_observation)
-    print(init_belief.getitem(st1))
-    
-    #act = ActionPrior
-    pouct = POUCT(3,1,4096,0.95,50,0,0,P,True,5,agent)
-    #print(init_belief.getitem(TigerState("tiger-left")))
-
-    #h = agent.gethistory()
-    #print("hist", agent.gethistory())
-    #a = agent.validActions(st,h)
-    #print ("valid actions ", a)
-    #p = pouct.plan()
-    #print("plan ", p)
-    # sim_obs = env.provide_observation(O,TigerAction("listen"))
-    # print("sim obs",repr(sim_obs))
-    # print("env test ",env.state_transition(act,1.0))
-
-    for i in range(10):
-        start = time.time()
-        action = pouct.plan()
-        end = time.time()
-        print("==== Step %d ====" % (i+1))
-        #print("True state:", newenv.state)
-        #print("Belief:", agent.cur_belief)
-        print("Action:", action.name)
-        # There is no state transition for the tiger domain.
-        # In general, the ennvironment state can be transitioned
-        # using
-        #
-        #   reward = tiger_problem.env.state_transition(action, execute=True)
-        #
-        # Or, it is possible that you don't have control
-        # over the environment change (e.g. robot acting
-        # in real world); In that case, you could skip
-        # the state transition and re-estimate the state
-        # (e.g. through the perception stack on the robot).
-        reward = newenv.reward_model().sample(newenv.getstate(), action, None)
-        print("Reward:", reward)
-
-        # Let's create some simulated real observation;
-        # Here, we use observation based on true state for sanity
-        # checking solver behavior. In general, this observation
-        # should be sampled from agent's observation model, as
-        #
-        #    real_observation = tiger_problem.agent.observation_model.sample(tiger_problem.env.state, action)
-        #
-        # or coming from an external source (e.g. robot sensor
-        # reading). Note that tiger_problem.env.state stores the
-        # environment state after action execution.
-        real_observation = TigerObservation(newenv.getstate().name)
-        print(">> Observation:",  real_observation)
-        print(">>Time:", end-start)
-        pouct.getAgent().update_hist(action, real_observation)
-        #print(len(pouct.getAgent().gethistory().history))
-        # Update the belief. If the planner is POMCP, planner.update
-        # also automatically updates agent belief.
-        pouct.update(action, real_observation)
-        #print(len(pouct.getAgent().gethistory().history))
-        new_belief = pouct.getAgent().cur_belief().update_hist_belief(
-                
-                action, real_observation,
-                pouct.getAgent().getObsModel(),
-                pouct.getAgent().getTransModel(),True,False,newenv.getstate())
-        #print("belief st ", new_belief.getHist())
-        pouct.getAgent().setbelief(new_belief, True)
-        #agent.setbelief(new_belief, True)
-        print("after bel ")
-        print(pouct.getAgent().cur_belief().getitem(st1),pouct.getAgent().cur_belief().getitem(st2))
-        #print(new_belief.getitem(st1), new_belief.getitem(st2))
-        #print("agent bel ")
-        #pouct.setAgent(agent)
-        #pouct = POUCT(3,1,10,0.9,1.4,0,0,P,True,5,agent)
-        #print(agent.belief().getitem(st1), pouct.getAgent().cur_belief().getitem(st1) )
-        #print(agent.belief().getitem(st1), agent.belief().getitem(st2))
-        #print("T left", pouct.getAgent().cur_belief().getitem(TigerState("tiger-left")), "T right", pouct.getAgent().cur_belief().getitem(TigerState("tiger-right")))
-        if action.name.startswith("open"):
-            # Make it clearer to see what actions are taken
-            # until every time door is opened.
-            print("\n")
-
-    
-
-
-

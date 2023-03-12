@@ -9,6 +9,7 @@ using std::string;
 #include <pybind11/stl_bind.h>
 #include <list>
 #include "pouct.h"
+//#include "oopomdp.h"
 //PYBIND11_MAKE_OPAQUE(std::map<std::shared_ptr<State>, float>);
 //#include "basics.h"
 //#include "planner.h"
@@ -240,6 +241,12 @@ PYBIND11_MODULE(example, m)
     state
         .def(py::init<string>())
         .def(py::init<>())
+        .def("__copy__", [](const State& self) {
+        return State(self);
+            })
+        .def("__deepcopy__", [](const State& self, py::dict) {
+                return State(self);
+            },"memo" )
         .def("getname", &State::getname)
         .def_readwrite("name", &State::name);
 
@@ -271,6 +278,7 @@ PYBIND11_MODULE(example, m)
     history
         
         .def(py::init<>())
+        .def("getHist", &History::getHist)
         .def_readwrite("history", &History::history);
     py::class_<Planner, PyPlanner, std::shared_ptr<Planner>> pln(m, "Planner");
     pln
@@ -299,8 +307,8 @@ PYBIND11_MODULE(example, m)
     tmodel
         .def(py::init<>())
         .def("probability", &TransitionModel::probability)
-        .def("sample", &TransitionModel::sample)
-        .def("argmax", &TransitionModel::argmax);
+        .def("sample", &TransitionModel::sample);
+       // .def("argmax", &TransitionModel::argmax);
     py::class_<RewardModel, PyRewardModel, std::shared_ptr<RewardModel>> rmodel(m, "RewardModel");
     rmodel
         .def(py::init<>())
@@ -420,7 +428,28 @@ PYBIND11_MODULE(example, m)
         .def("random", &Histogram::random)
         .def("isNormalized", &Histogram::isNormalized)
         .def("update_hist_belief", &Histogram::update_hist_belief);*/
-    
+    /*py::class_<ObjectState, PyObjectState, std::shared_ptr<ObjectState>> objst(m, "ObjectState");
+    objst
+
+        .def(py::init<string, std::unordered_map<string, int> >())
+        //.def(py::init<std::shared_ptr<Belief>, std::shared_ptr<TransitionModel>, std::shared_ptr<ObservationModel>,
+         //   std::shared_ptr<RewardModel> >())
+        .def("getItem", &ObjectState::getItem)
+        .def("setItem", &ObjectState::setItem)
+        .def("attrlen", &ObjectState::attrlen)
+        .def("copy", &ObjectState::copy);
+
+    py::class_<OOState, PyOOState, std::shared_ptr<OOState>> oost(m, "ObjectState");
+    oost
+
+        .def(py::init< std::unordered_map<string, std::shared_ptr<ObjectState>> >())
+        //.def(py::init<std::shared_ptr<Belief>, std::shared_ptr<TransitionModel>, std::shared_ptr<ObservationModel>,
+         //   std::shared_ptr<RewardModel> >())
+        .def("get_object_state", &OOState::get_object_state)
+        .def("set_object_state", &OOState::set_object_state)
+        .def("get_object_class", &OOState::get_object_class)
+        .def("get_object_attribute", &OOState::get_object_attribute);*/
+
     m.def("sample_generative_model", &sample_generative_model, py::arg("agent"), py::arg("state"),py::arg("action"),py::arg("discount_factor")=1);
     //m.def("sample_explict_models1", &sample_explict_models1, py::arg("T"), py::arg("O"), py::arg("R"), py::arg("state"), py::arg("a"),py::arg("discount_factor")=1);
     m.def("sample_explict_models", &sample_explict_models, py::arg("T"), py::arg("R"), py::arg("state"), py::arg("a"), py::arg("discount_factor")=1);

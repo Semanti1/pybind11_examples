@@ -98,7 +98,7 @@ class ObservationModel {
 public:
     virtual double probability(Observation* observation,
         State* next_state,
-        Action* action) = 0;
+        Action* action, State* next_robot_state) = 0;
 
     virtual std::shared_ptr<Observation> sample(State* next_state,
         Action* action) = 0;
@@ -120,8 +120,10 @@ public:
         Action* action) = 0;
     //virtual State* sample(const State* state,
       //   const Action* action) =0;
-    State argmax(const State& state,
-        const Action& action) {};
+    //virtual std::shared_ptr<State> argmax(const State& state,
+      //  const Action& action) {};
+    //virtual std::shared_ptr<State> argmax(std::shared_ptr<State> state,
+      //  std::shared_ptr<Action> action) {};
     virtual ~TransitionModel() { }
 };
 
@@ -270,7 +272,7 @@ public:
     std::shared_ptr<State> mpe();
     std::shared_ptr<State> random();
     bool isNormalized(double eps);
-    std::shared_ptr<Histogram> update_hist_belief(std::shared_ptr<Action> real_act, std::shared_ptr<Observation> real_obs, std::shared_ptr<ObservationModel> O, std::shared_ptr<TransitionModel> T, bool normalize, bool static_transition);
+    std::shared_ptr<Histogram> update_hist_belief(std::shared_ptr<Action> real_act, std::shared_ptr<Observation> real_obs, std::shared_ptr<ObservationModel> O, std::shared_ptr<TransitionModel> T, bool normalize, bool static_transition, std::shared_ptr<State> next_robot_state);
     //Histogram update_hist_belief(Histogram current_hist, Action real_act, Observation real_obs, ObservationModel O, TransitionModel T, bool normalize = true, bool static_transition = false);
     virtual ~Histogram() { }
 
@@ -313,14 +315,15 @@ public:
     // trampoline (one for each virtual function)
     double probability(Observation* observation,
         State* next_state,
-        Action* action) override {
+        Action* action, State* next_robot_state) override {
         PYBIND11_OVERLOAD_PURE(
             double, /* Return type */
             ObservationModel,      /* Parent class */
             probability,        /* Name of function in C++ (must match Python name) */
             observation,      /* Argument(s) */
             next_state,
-            action
+            action,
+            next_robot_state
         );
     }
 

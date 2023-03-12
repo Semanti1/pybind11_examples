@@ -72,13 +72,13 @@ bool Histogram::isNormalized(double eps = 1e-9)
 		return false;
 }
 
-std::shared_ptr<Histogram> Histogram::update_hist_belief(std::shared_ptr<Action> real_act, std::shared_ptr<Observation> real_obs, std::shared_ptr<ObservationModel> O, std::shared_ptr<TransitionModel> T, bool normalize = true, bool static_transition = false)
+std::shared_ptr<Histogram> Histogram::update_hist_belief(std::shared_ptr<Action> real_act, std::shared_ptr<Observation> real_obs, std::shared_ptr<ObservationModel> O, std::shared_ptr<TransitionModel> T, bool normalize = true, bool static_transition = false, std::shared_ptr<State> next_robot_state=nullptr)
 {
 	std::map<std::shared_ptr<State>, float> new_histogram;
 	double total_prob = 0;
 	for (auto const& next_state : _histogram)
 	{
-		double obs_prob = O->probability(real_obs.get(), next_state.first.get(), real_act.get());
+		double obs_prob = O->probability(real_obs.get(), next_state.first.get(), real_act.get(), next_robot_state.get());
 		double trans_prob = 0;
 		if (!static_transition)
 		{
@@ -135,7 +135,7 @@ History Agent::gethistory()
 }*/
 void Agent::update_hist(std::shared_ptr<Action> act, std::shared_ptr<Observation> obs)
 {
-	cout << "action " << act.get()->name << " obs " << obs;
+	cout << "action " << act.get()->name << " obs " << obs->name;
 	//Action* a = act.get();
 	//hist->history.push_back(act);
 	hist.add(act,obs);
